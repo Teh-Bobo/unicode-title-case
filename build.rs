@@ -2,6 +2,8 @@ use std::collections::BTreeMap;
 use std::path::Path;
 use std::{env, fs};
 
+/// This takes the Unicode files found in resources/ and converts them into the titlecase cable
+/// found in casing.rs.
 pub fn main() {
     println!("cargo:rerun-if-changed=resources/");
     println!("cargo:rerun-if-changed=src/");
@@ -40,9 +42,9 @@ pub fn main() {
         if let Some(last_cp) = l.last().filter(|&last| !last.is_empty() && cp != last) {
             let cp = char::from_u32(u32::from_str_radix(cp, 16).unwrap()).unwrap();
             if let Some(old) = data.insert(cp, [last_cp, "0", "0"]) {
-                assert_eq!(old[0], last_cp);
-                assert_eq!(old[1], "0");
-                assert_eq!(old[2], "0");
+                assert_eq!(old[0], last_cp, "For code point: {cp}");
+                assert_eq!(old[1], "0", "For code point: {cp}");
+                assert_eq!(old[2], "0", "For code point: {cp}");
             }
         }
     });
