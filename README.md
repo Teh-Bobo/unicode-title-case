@@ -8,7 +8,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-unicode_titlecase = "1.0.1"
+unicode_titlecase = "1.1.0"
 ```
 
 ## Features
