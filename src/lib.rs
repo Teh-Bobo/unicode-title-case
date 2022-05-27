@@ -150,6 +150,8 @@ impl TitleCase for char {
     }
 }
 
+/// An iterator over a titlecase mapped char.
+///
 /// Copied from the std library's [core::char::ToLowercase] and [core::char::ToUppercase].
 #[derive(Debug, Clone)]
 pub struct ToTitleCase(CaseMappingIter);
