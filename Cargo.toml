@@ -1,6 +1,6 @@
 [package]
 name = "unicode_titlecase"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 authors = ["Carl Raffaele"]
 license = "MIT"

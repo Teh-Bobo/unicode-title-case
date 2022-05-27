@@ -16,28 +16,28 @@ include!(concat!(env!("OUT_DIR"), "/casing.rs"));
 /// # Examples
 /// If the character is already titlecase then it will return itself:
 /// ```
-/// use unicode_title_case::to_title_case;
-/// assert_eq!(to_title_case('A'), ['A', '\0', '\0']);
+/// use unicode_titlecase::to_titlecase;
+/// assert_eq!(to_titlecase('A'), ['A', '\0', '\0']);
 /// ```
 /// Single-char characters are mapped:
 /// ```
-/// use unicode_title_case::to_title_case;
-/// assert_eq!(to_title_case('Ǆ'), ['ǅ', '\0', '\0']);
+/// use unicode_titlecase::to_titlecase;
+/// assert_eq!(to_titlecase('Ǆ'), ['ǅ', '\0', '\0']);
 /// ```
 /// Multi-char ligatures are converted:
 /// ```
-/// use unicode_title_case::to_title_case;
-/// assert_eq!(to_title_case('ﬄ'), ['F', 'f', 'l']);
+/// use unicode_titlecase::to_titlecase;
+/// assert_eq!(to_titlecase('ﬄ'), ['F', 'f', 'l']);
 /// ```
 /// Locale is ignored:
 /// ```
-/// use unicode_title_case::to_title_case;
-/// assert_eq!(to_title_case('i'), ['I', '\0', '\0']);
+/// use unicode_titlecase::to_titlecase;
+/// assert_eq!(to_titlecase('i'), ['I', '\0', '\0']);
 /// ```
 /// # Locale
 /// This function is not locale specific. Unicode special casing has rules for tr and az that
-/// this function does not take into account. For tr and az locales use [to_title_case_tr_or_az]
-pub fn to_title_case(c: char) -> [char; 3] {
+/// this function does not take into account. For tr and az locales use [to_titlecase_tr_or_az]
+pub fn to_titlecase(c: char) -> [char; 3] {
     if let Ok(index) = TITLECASE_TABLE.binary_search_by(|&(key, _)| key.cmp(&c)) {
         TITLECASE_TABLE[index].1
     } else {
@@ -50,103 +50,103 @@ pub fn to_title_case(c: char) -> [char; 3] {
 /// # Examples
 /// If the character is already titlecase then it will return itself:
 /// ```
-/// use unicode_title_case::to_title_case_tr_or_az;
-/// assert_eq!(to_title_case_tr_or_az('A'), ['A', '\0', '\0']);
+/// use unicode_titlecase::to_titlecase_tr_or_az;
+/// assert_eq!(to_titlecase_tr_or_az('A'), ['A', '\0', '\0']);
 /// ```
 /// Single-char characters are mapped:
 /// ```
-/// use unicode_title_case::to_title_case_tr_or_az;
-/// assert_eq!(to_title_case_tr_or_az('Ǆ'), ['ǅ', '\0', '\0']);
+/// use unicode_titlecase::to_titlecase_tr_or_az;
+/// assert_eq!(to_titlecase_tr_or_az('Ǆ'), ['ǅ', '\0', '\0']);
 /// ```
 /// Multi-char ligatures are converted:
 /// ```
-/// use unicode_title_case::to_title_case_tr_or_az;
-/// assert_eq!(to_title_case_tr_or_az('ﬄ'), ['F', 'f', 'l']);
+/// use unicode_titlecase::to_titlecase_tr_or_az;
+/// assert_eq!(to_titlecase_tr_or_az('ﬄ'), ['F', 'f', 'l']);
 /// ```
 /// Locale is tr/az:
 /// ```
-/// use unicode_title_case::to_title_case_tr_or_az;
-/// assert_eq!(to_title_case_tr_or_az('i'), ['İ', '\0', '\0']);
+/// use unicode_titlecase::to_titlecase_tr_or_az;
+/// assert_eq!(to_titlecase_tr_or_az('i'), ['İ', '\0', '\0']);
 /// ```
 /// # Locale
 /// This function is specific to the tr and az locales. It returns different results for certain
-/// chars. To use locale agnostic version see [to_title_case].
-pub fn to_title_case_tr_or_az(c: char) -> [char; 3] {
+/// chars. To use locale agnostic version see [to_titlecase].
+pub fn to_titlecase_tr_or_az(c: char) -> [char; 3] {
     if c == '\u{0069}' {
         ['\u{0130}', '\0', '\0']
     } else {
-        to_title_case(c)
+        to_titlecase(c)
     }
 }
 
 /// This trait adds title case methods to [char]. They function the same as the std library's
 /// [char::to_lowercase] and [char::to_uppercase] using a custom [ToTitleCase] iterator.
 pub trait TitleCase {
-    /// Wraps [to_title_case] in an iterator. The iterator will yield at most 3 chars.
+    /// Wraps [to_titlecase] in an iterator. The iterator will yield at most 3 chars.
     ///
     /// # Examples
     /// If the character is already titlecase then it will return itself
     /// ```
-    /// use unicode_title_case::TitleCase;
-    /// assert_eq!('A'.to_title_case().to_string(), "A")
+    /// use unicode_titlecase::TitleCase;
+    /// assert_eq!('A'.to_titlecase().to_string(), "A")
     /// ```
     /// Single-char characters are mapped:
     /// ```
-    /// use unicode_title_case::TitleCase;
-    /// assert_eq!('Ǆ'.to_title_case().to_string(), "ǅ")
+    /// use unicode_titlecase::TitleCase;
+    /// assert_eq!('Ǆ'.to_titlecase().to_string(), "ǅ")
     /// ```
     /// Multi-char ligatures are converted:
     /// ```
-    /// use unicode_title_case::TitleCase;
-    /// assert_eq!('ﬄ'.to_title_case().to_string(), "Ffl")
+    /// use unicode_titlecase::TitleCase;
+    /// assert_eq!('ﬄ'.to_titlecase().to_string(), "Ffl")
     /// ```
     /// Locale is ignored:
     /// ```
-    /// use unicode_title_case::TitleCase;
-    /// assert_eq!('i'.to_title_case().to_string(), "I")
+    /// use unicode_titlecase::TitleCase;
+    /// assert_eq!('i'.to_titlecase().to_string(), "I")
     /// ```
     /// # Locale
     /// This function is not locale specific. Unicode special casing has rules for tr and az that
-    /// this function does not take into account. For tr and az locales use [TitleCase::to_title_case_tr_or_az]
-    fn to_title_case(self) -> ToTitleCase;
+    /// this function does not take into account. For tr and az locales use [TitleCase::to_titlecase_tr_or_az]
+    fn to_titlecase(self) -> ToTitleCase;
 
-    /// Wraps [to_title_case_tr_or_az] in an iterator. The iterator will yield at most 3 chars.
+    /// Wraps [to_titlecase_tr_or_az] in an iterator. The iterator will yield at most 3 chars.
     ///
     /// # Examples
     /// If the character is already titlecase then it will return itself
     /// ```
-    /// use unicode_title_case::TitleCase;
-    /// assert_eq!('A'.to_title_case_tr_or_az().to_string(), "A")
+    /// use unicode_titlecase::TitleCase;
+    /// assert_eq!('A'.to_titlecase_tr_or_az().to_string(), "A")
     /// ```
     /// Single-char characters are mapped:
     /// ```
-    /// use unicode_title_case::TitleCase;
-    /// assert_eq!('Ǆ'.to_title_case_tr_or_az().to_string(), "ǅ")
+    /// use unicode_titlecase::TitleCase;
+    /// assert_eq!('Ǆ'.to_titlecase_tr_or_az().to_string(), "ǅ")
     /// ```
     /// Multi-char ligatures are converted:
     /// ```
-    /// use unicode_title_case::TitleCase;
-    /// assert_eq!('ﬄ'.to_title_case_tr_or_az().to_string(), "Ffl")
+    /// use unicode_titlecase::TitleCase;
+    /// assert_eq!('ﬄ'.to_titlecase_tr_or_az().to_string(), "Ffl")
     /// ```
     /// Locale is tr/az:
     /// ```
-    /// use unicode_title_case::TitleCase;
-    /// assert_eq!('i'.to_title_case_tr_or_az().to_string(), "İ")
+    /// use unicode_titlecase::TitleCase;
+    /// assert_eq!('i'.to_titlecase_tr_or_az().to_string(), "İ")
     /// ```
     ///
     /// # Locale
     /// This function is specific to the tr and az locales. It returns different results for certain
-    /// chars. To use locale agnostic version see [TitleCase::to_title_case].
-    fn to_title_case_tr_or_az(self) -> ToTitleCase;
+    /// chars. To use locale agnostic version see [TitleCase::to_titlecase].
+    fn to_titlecase_tr_or_az(self) -> ToTitleCase;
 }
 
 impl TitleCase for char {
-    fn to_title_case(self) -> ToTitleCase {
-        ToTitleCase(CaseMappingIter::new(to_title_case(self)))
+    fn to_titlecase(self) -> ToTitleCase {
+        ToTitleCase(CaseMappingIter::new(to_titlecase(self)))
     }
 
-    fn to_title_case_tr_or_az(self) -> ToTitleCase {
-        ToTitleCase(CaseMappingIter::new(to_title_case_tr_or_az(self)))
+    fn to_titlecase_tr_or_az(self) -> ToTitleCase {
+        ToTitleCase(CaseMappingIter::new(to_titlecase_tr_or_az(self)))
     }
 }
 
