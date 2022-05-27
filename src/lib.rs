@@ -1,10 +1,11 @@
 //! This crate is an implementation of the Unicode Title Casing algorithm. It implements a trait
-//! on [char] that adds title case handling methods. These methods are very similar to how the std
-//! library currently handles uppercase and lowercase.
+//! on [char] and [str] that adds title case handling methods. These methods are very similar to how
+//! the std library currently handles uppercase and lowercase.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(missing_docs)]
 #![deny(rustdoc::missing_doc_code_examples)]
+
 use core::fmt::Write;
 use core::iter::FusedIterator;
 use std::fmt::{Debug, Formatter};
@@ -150,6 +151,123 @@ impl TitleCase for char {
     }
 }
 
+#[cfg(feature = "strings")]
+/// Trait to add titlecase operations to Strings and string slices. Both locale agnostic and TR/AZ
+/// versions of the functions are supplied.
+pub trait StrTitleCase {
+    /// Titlecases the first char of a string, leaves the rest unchanged, and returns a copy.
+    ///
+    /// # Examples
+    /// If the str is already titlecase then it will return itself
+    /// ```
+    /// use unicode_titlecase::StrTitleCase;
+    /// assert_eq!("ABC".to_titlecase(), "ABC")
+    /// ```
+    /// Single-char characters are mapped:
+    /// ```
+    /// use unicode_titlecase::StrTitleCase;
+    /// assert_eq!("ǄǄ".to_titlecase(), "ǅǄ")
+    /// ```
+    /// Multi-char ligatures are converted:
+    /// ```
+    /// use unicode_titlecase::StrTitleCase;
+    /// assert_eq!("ﬄabc".to_titlecase(), "Fflabc")
+    /// ```
+    /// Locale is ignored:
+    /// ```
+    /// use unicode_titlecase::StrTitleCase;
+    /// assert_eq!("iii".to_titlecase(), "Iii")
+    /// ```
+    /// # Locale
+    /// This function is not locale specific. Unicode special casing has rules for tr and az that
+    /// this function does not take into account. For tr and az locales use [StrTitleCase::to_titlecase_tr_or_az]
+    fn to_titlecase(&self) -> String;
+    /// Titlecases the first char of a string, lowercases the rest of the string, and returns a copy.
+    ///
+    /// # Examples
+    /// If the str is already titlecase then it will return itself
+    /// ```
+    /// use unicode_titlecase::StrTitleCase;
+    /// assert_eq!("ABC".to_titlecase_lower_rest(), "Abc")
+    /// ```
+    /// Single-char characters are mapped:
+    /// ```
+    /// use unicode_titlecase::StrTitleCase;
+    /// assert_eq!("ǄǄ".to_titlecase_lower_rest(), "ǅǆ")
+    /// ```
+    /// Multi-char ligatures are converted:
+    /// ```
+    /// use unicode_titlecase::StrTitleCase;
+    /// assert_eq!("ﬄabc".to_titlecase_lower_rest(), "Fflabc")
+    /// ```
+    /// Locale is ignored:
+    /// ```
+    /// use unicode_titlecase::StrTitleCase;
+    /// assert_eq!("iIi".to_titlecase_lower_rest(), "Iii")
+    /// ```
+    /// # Locale
+    /// This function is not locale specific. Unicode special casing has rules for tr and az that
+    /// this function does not take into account. For tr and az locales use [StrTitleCase::to_titlecase_tr_or_az_lower_rest]
+    fn to_titlecase_lower_rest(&self) -> String;
+    /// This functions the same way as [StrTitleCase::to_titlecase] except that it uses the TR/AZ
+    /// locales. This has one major change:
+    /// ```
+    /// use unicode_titlecase::StrTitleCase;
+    /// assert_eq!("iIi".to_titlecase_tr_or_az(), "İIi")
+    /// ```
+    ///
+    /// For the locale agnostic version use [StrTitleCase::to_titlecase].
+    fn to_titlecase_tr_or_az(&self) -> String;
+    /// This functions the same way as [StrTitleCase::to_titlecase_lower_rest] except that it uses
+    /// the TR/AZ locales. This has one major change:
+    /// ```
+    /// use unicode_titlecase::StrTitleCase;
+    /// assert_eq!("iIi".to_titlecase_tr_or_az_lower_rest(), "İii")
+    /// ```
+    ///
+    /// For the locale agnostic version use [StrTitleCase::to_titlecase_lower_rest].
+    fn to_titlecase_tr_or_az_lower_rest(&self) -> String;
+}
+
+#[cfg(feature = "strings")]
+impl StrTitleCase for str {
+    fn to_titlecase(&self) -> String {
+        let mut iter = self.chars();
+        iter.next()
+            .into_iter()
+            .flat_map(TitleCase::to_titlecase)
+            .chain(iter)
+            .collect()
+    }
+
+    fn to_titlecase_lower_rest(&self) -> String {
+        let mut iter = self.chars();
+        iter.next()
+            .into_iter()
+            .flat_map(TitleCase::to_titlecase)
+            .chain(iter.flat_map(char::to_lowercase))
+            .collect()
+    }
+
+    fn to_titlecase_tr_or_az(&self) -> String {
+        let mut iter = self.chars();
+        iter.next()
+            .into_iter()
+            .flat_map(TitleCase::to_titlecase_tr_or_az)
+            .chain(iter)
+            .collect()
+    }
+
+    fn to_titlecase_tr_or_az_lower_rest(&self) -> String {
+        let mut iter = self.chars();
+        iter.next()
+            .into_iter()
+            .flat_map(TitleCase::to_titlecase_tr_or_az)
+            .chain(iter.flat_map(char::to_lowercase))
+            .collect()
+    }
+}
+
 /// An iterator over a titlecase mapped char.
 ///
 /// Copied from the std library's [core::char::ToLowercase] and [core::char::ToUppercase].
@@ -259,7 +377,7 @@ impl DoubleEndedIterator for CaseMappingIter {
 
 #[cfg(feature = "std")]
 impl std::fmt::Display for CaseMappingIter {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match *self {
             CaseMappingIter::Three(a, b, c) => {
                 f.write_char(a)?;
