@@ -1,9 +1,9 @@
 # Unicode Titlecase
-Unicode titlecasing operations for chars. The crate supports has additional functionality to
-support the TR/AZ locale. 
-
+Unicode titlecasing operations for chars and strings. The crate supports has additional
+functionality to support the TR/AZ locale.
 
 ## Installation
+
 Add this to your `Cargo.toml`:
 
 ```toml
@@ -11,15 +11,18 @@ Add this to your `Cargo.toml`:
 unicode_titlecase = "1.0.1"
 ```
 
-## Features/Dependencies
+## Features
 
-There are no dependencies for this crate. The only feature is "std" which is used to add 
-```std::Display``` on the iterators. This enables code like 
-```'ﬄ'.to_titlecase().to_string()```. 
+This crate is no_std capable. ```std``` is used for
+```std::Display``` on the iterators and for the "strings" feature. The "strings" feature
+enables functions that operation on Rust ```Strings```.
 
 ## Usage
 
-To turn a ```char``` into a its titlecase equivalent ```[char; 3]```array:
+### Chars
+
+To turn a ```char``` into its titlecase equivalent ```[char; 3]```array:
+
 ```rust
 use unicode_titlecase::to_titlecase;
 
@@ -39,21 +42,44 @@ assert_eq!('Ǆ'.to_titlecase().to_string(), "ǅ");
 assert_eq!('ﬄ'.to_titlecase().to_string(), "Ffl");
 ```
 
-### Locale
-The TR and AZ locales have different rules for how to titlecase certain characters. 
-The ```to_titlecase``` functions assume the locale is neither of these locations. For conversions
-using TR or AZ locales the following functions are also provided:
+### Strings
+
+A similar trait is defined on ```str``` if the "strings" feature is enabled (by default). This
+will titlecase the first char of the string, leave the rest unchanged, and return a newly
+allocated ```String```.
 
 ```rust
-use unicode_titlecase::to_titlecase_tr_or_az;
-assert_eq!(to_titlecase_tr_or_az('i'), ['İ', '\0', '\0']);
+use unicode_titlecase::StrTitleCase;
+assert_eq!("iii".to_titlecase(), "Iii");
+assert_eq!("ABC".to_titlecase(), "ABC");
+assert_eq!("ǄǄ".to_titlecase(), "ǅǄ");
+assert_eq!("ﬄabc".to_titlecase(), "Fflabc");
 ```
-And as an iterator:
+
+Alternatively, you could lowercase the rest of the ```str```:
+
 ```rust
-use unicode_titlecase::TitleCase;
+use unicode_titlecase::StrTitleCase;
+assert_eq!("iIi".to_titlecase_lower_rest(), "Iii");
+assert_eq!("ABC".to_titlecase_lower_rest(), "Abc");
+assert_eq!("ǄǄ".to_titlecase_lower_rest(), "ǅǆ");
+assert_eq!("ﬄabc".to_titlecase_lower_rest(), "Fflabc");
+```
+
+### Locale
+
+The TR and AZ locales have different rules for how to titlecase certain characters.
+The ```to_titlecase``` functions assume the locale is neither of these locations. A "tr_or_az"
+version of each function is provided instead.
+
+```rust
+use unicode_titlecase::{to_titlecase_tr_or_az, StrTitleCase};
+assert_eq!(to_titlecase_tr_or_az('i'), ['İ', '\0', '\0']);
 assert_eq!('i'.to_titlecase_tr_or_az().to_string(), "İ");
+assert_eq!("iIi".to_titlecase_tr_or_az(), "İIi");
+assert_eq!("iIi".to_titlecase_tr_or_az_lower_rest(), "İii");
 ```
 
 ## License
 
-`unicode_titlecase` is licensed under the [MIT License](LICENSE)
+`unicode_titlecase` is licensed under the [MIT License](LICENSE.txt)
