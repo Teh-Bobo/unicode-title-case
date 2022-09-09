@@ -5,6 +5,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(missing_docs)]
 #![deny(rustdoc::missing_doc_code_examples)]
+#![deny(unsafe_code)]
 
 use core::fmt::Write;
 use core::iter::FusedIterator;
