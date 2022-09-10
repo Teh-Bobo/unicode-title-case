@@ -9,6 +9,5 @@ repository = "https://github.com/Teh-Bobo/unicode-title-case"
 description = "A crate to add Unicode titlecase options to chars and strings"
 
 [features]
-default = ["strings"]
+default = ["std"]
 std = []
-strings = ["std"]

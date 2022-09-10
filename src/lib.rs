@@ -7,9 +7,11 @@
 #![deny(rustdoc::missing_doc_code_examples)]
 #![deny(unsafe_code)]
 
-use core::fmt::Write;
+extern crate alloc;
+
+use alloc::string::String;
+use core::fmt::{Debug, Formatter, Write};
 use core::iter::FusedIterator;
-use std::fmt::{Debug, Formatter};
 
 include!(concat!(env!("OUT_DIR"), "/casing.rs"));
 
@@ -173,7 +175,6 @@ impl TitleCase for char {
     }
 }
 
-#[cfg(feature = "strings")]
 /// Trait to add titlecase operations to Strings and string slices. Both locale agnostic and TR/AZ
 /// versions of the functions are supplied.
 pub trait StrTitleCase {
@@ -283,7 +284,6 @@ pub trait StrTitleCase {
     fn starts_titlecase_rest_lower(&self) -> bool;
 }
 
-#[cfg(feature = "strings")]
 impl StrTitleCase for str {
     fn to_titlecase(&self) -> String {
         let mut iter = self.chars();
