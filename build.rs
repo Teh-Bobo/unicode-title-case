@@ -1,6 +1,6 @@
+use std::{env, fs};
 use std::collections::BTreeMap;
 use std::path::Path;
-use std::{env, fs};
 
 /// This takes the Unicode files found in resources/ and converts them into the titlecase cable
 /// found in casing.rs.
@@ -9,7 +9,7 @@ pub fn main() {
     println!("cargo:rerun-if-changed=src/");
     let out_dir = env::var_os("OUT_DIR").unwrap();
     let in_path = Path::new(&env::var_os("CARGO_MANIFEST_DIR").unwrap()).join("resources");
-    let sc_path = in_path.clone().join("SpecialCasing.txt");
+    let sc_path = in_path.join("SpecialCasing.txt");
     let base_path = in_path.join("UnicodeData.txt");
     let dest_path = Path::new(&out_dir).join("casing.rs");
 
@@ -24,7 +24,7 @@ pub fn main() {
             let code_point = l.next().unwrap();
             let tcs = l.next().unwrap();
             let tccp: Vec<&str> = tcs.split_ascii_whitespace().collect();
-            if let Some(tccp0) = tccp.get(0).filter(|&&tccp0| code_point != tccp0) {
+            if let Some(tccp0) = tccp.first().filter(|&&tccp0| code_point != tccp0) {
                 let cp = char::from_u32(u32::from_str_radix(code_point, 16).unwrap()).unwrap();
                 let tccp1 = tccp.get(1).unwrap_or(&"0");
                 let tccp2 = tccp.get(2).unwrap_or(&"0");
@@ -37,7 +37,7 @@ pub fn main() {
         });
     let base_file = fs::read_to_string(base_path).unwrap();
     base_file.lines().for_each(|line| {
-        let mut l = line.split(";");
+        let mut l = line.split(';');
         let cp = l.next().unwrap();
         if let Some(last_cp) = l.last().filter(|&last| !last.is_empty() && cp != last) {
             let cp = char::from_u32(u32::from_str_radix(cp, 16).unwrap()).unwrap();

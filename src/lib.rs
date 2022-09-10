@@ -2,19 +2,21 @@
 //! on [char] and [str] that adds title case handling methods. These methods are very similar to how
 //! the std library currently handles uppercase and lowercase.
 
-#![cfg_attr(not(feature = "std"), no_std)]
+#![no_std]
 #![deny(missing_docs)]
 #![deny(rustdoc::missing_doc_code_examples)]
 #![deny(unsafe_code)]
+#![warn(clippy::pedantic)]
 
 extern crate alloc;
 
 use alloc::string::String;
-use core::fmt::{Debug, Formatter, Write};
+use core::fmt::{Debug, Display, Formatter, Result, Write};
 use core::iter::FusedIterator;
 
 include!(concat!(env!("OUT_DIR"), "/casing.rs"));
 
+#[allow(clippy::doc_link_with_quotes)]
 /// Accepts a char and returns the Unicode Title Case for that character as a 3 char array.
 ///
 /// # Examples
@@ -40,7 +42,8 @@ include!(concat!(env!("OUT_DIR"), "/casing.rs"));
 /// ```
 /// # Locale
 /// This function is not locale specific. Unicode special casing has rules for tr and az that
-/// this function does not take into account. For tr and az locales use [to_titlecase_tr_or_az]
+/// this function does not take into account. For tr and az locales use [`to_titlecase_tr_or_az`]
+#[must_use]
 pub fn to_titlecase(c: char) -> [char; 3] {
     if let Ok(index) = TITLECASE_TABLE.binary_search_by(|&(key, _)| key.cmp(&c)) {
         TITLECASE_TABLE[index].1
@@ -49,6 +52,7 @@ pub fn to_titlecase(c: char) -> [char; 3] {
     }
 }
 
+#[allow(clippy::doc_link_with_quotes)]
 /// Accepts a char and returns the Unicode Title Case for that character as a 3 char array.
 ///
 /// # Examples
@@ -74,7 +78,8 @@ pub fn to_titlecase(c: char) -> [char; 3] {
 /// ```
 /// # Locale
 /// This function is specific to the tr and az locales. It returns different results for certain
-/// chars. To use locale agnostic version see [to_titlecase].
+/// chars. To use locale agnostic version see [`to_titlecase`].
+#[must_use]
 pub fn to_titlecase_tr_or_az(c: char) -> [char; 3] {
     if c == '\u{0069}' {
         ['\u{0130}', '\0', '\0']
@@ -83,10 +88,10 @@ pub fn to_titlecase_tr_or_az(c: char) -> [char; 3] {
     }
 }
 
-/// This trait adds title case methods to [char]. They function the same as the std library's
-/// [char::to_lowercase] and [char::to_uppercase] using a custom [ToTitleCase] iterator.
+/// This trait adds title case methods to [`char`]. They function the same as the std library's
+/// [`char::to_lowercase`] and [`char::to_uppercase`] using a custom [`ToTitleCase`] iterator.
 pub trait TitleCase {
-    /// Wraps [to_titlecase] in an iterator. The iterator will yield at most 3 chars.
+    /// Wraps [`to_titlecase`] in an iterator. The iterator will yield at most 3 chars.
     ///
     /// # Examples
     /// If the character is already titlecase then it will return itself
@@ -111,10 +116,10 @@ pub trait TitleCase {
     /// ```
     /// # Locale
     /// This function is not locale specific. Unicode special casing has rules for tr and az that
-    /// this function does not take into account. For tr and az locales use [TitleCase::to_titlecase_tr_or_az]
+    /// this function does not take into account. For tr and az locales use [`TitleCase::to_titlecase_tr_or_az`]
     fn to_titlecase(self) -> ToTitleCase;
 
-    /// Wraps [to_titlecase_tr_or_az] in an iterator. The iterator will yield at most 3 chars.
+    /// Wraps [`to_titlecase_tr_or_az`] in an iterator. The iterator will yield at most 3 chars.
     ///
     /// # Examples
     /// If the character is already titlecase then it will return itself
@@ -140,7 +145,7 @@ pub trait TitleCase {
     ///
     /// # Locale
     /// This function is specific to the tr and az locales. It returns different results for certain
-    /// chars. To use locale agnostic version see [TitleCase::to_titlecase].
+    /// chars. To use locale agnostic version see [`TitleCase::to_titlecase`].
     fn to_titlecase_tr_or_az(self) -> ToTitleCase;
 
     /// Returns true if the given character is a titlecase character. This function works for all locales
@@ -203,7 +208,7 @@ pub trait StrTitleCase {
     /// ```
     /// # Locale
     /// This function is not locale specific. Unicode special casing has rules for tr and az that
-    /// this function does not take into account. For tr and az locales use [StrTitleCase::to_titlecase_tr_or_az]
+    /// this function does not take into account. For tr and az locales use [`StrTitleCase::to_titlecase_tr_or_az`]
     fn to_titlecase(&self) -> String;
     /// Titlecases the first char of a string, lowercases the rest of the string, and returns a copy.
     ///
@@ -230,25 +235,25 @@ pub trait StrTitleCase {
     /// ```
     /// # Locale
     /// This function is not locale specific. Unicode special casing has rules for tr and az that
-    /// this function does not take into account. For tr and az locales use [StrTitleCase::to_titlecase_tr_or_az_lower_rest]
+    /// this function does not take into account. For tr and az locales use [`StrTitleCase::to_titlecase_tr_or_az_lower_rest`]
     fn to_titlecase_lower_rest(&self) -> String;
-    /// This functions the same way as [StrTitleCase::to_titlecase] except that it uses the TR/AZ
+    /// This functions the same way as [`StrTitleCase::to_titlecase`] except that it uses the TR/AZ
     /// locales. This has one major change:
     /// ```
     /// use unicode_titlecase::StrTitleCase;
     /// assert_eq!("iIi".to_titlecase_tr_or_az(), "İIi")
     /// ```
     ///
-    /// For the locale agnostic version use [StrTitleCase::to_titlecase].
+    /// For the locale agnostic version use [`StrTitleCase::to_titlecase`].
     fn to_titlecase_tr_or_az(&self) -> String;
-    /// This functions the same way as [StrTitleCase::to_titlecase_lower_rest] except that it uses
+    /// This functions the same way as [`StrTitleCase::to_titlecase_lower_rest`] except that it uses
     /// the TR/AZ locales. This has one major change:
     /// ```
     /// use unicode_titlecase::StrTitleCase;
     /// assert_eq!("iIi".to_titlecase_tr_or_az_lower_rest(), "İii")
     /// ```
     ///
-    /// For the locale agnostic version use [StrTitleCase::to_titlecase_lower_rest].
+    /// For the locale agnostic version use [`StrTitleCase::to_titlecase_lower_rest`].
     fn to_titlecase_tr_or_az_lower_rest(&self) -> String;
 
     /// Tests if the first char of this string is titlecase. This is locale agnostic and returns the
@@ -325,24 +330,22 @@ impl StrTitleCase for str {
         self.chars()
             .next()
             .as_ref()
-            .map(TitleCase::is_titlecase)
-            .unwrap_or(false)
+            .map_or(false, TitleCase::is_titlecase)
     }
 
     fn starts_titlecase_rest_lower(&self) -> bool {
         let mut iter = self.chars();
         iter.next()
             .as_ref()
-            .map(TitleCase::is_titlecase)
-            .unwrap_or(false)
+            .map_or(false, TitleCase::is_titlecase)
             && iter.all(char::is_lowercase)
     }
 }
 
 /// An iterator over a titlecase mapped char.
 ///
-/// Copied from the std library's [core::char::ToLowercase] and [core::char::ToUppercase].
-#[derive(Debug, Clone)]
+/// Copied from the std library's [`core::char::ToLowercase`] and [`core::char::ToUppercase`].
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub struct ToTitleCase(CaseMappingIter);
 
 impl Iterator for ToTitleCase {
@@ -365,15 +368,14 @@ impl FusedIterator for ToTitleCase {}
 
 impl ExactSizeIterator for ToTitleCase {}
 
-#[cfg(feature = "std")]
-impl std::fmt::Display for ToTitleCase {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(&self.0, f)
+impl Display for ToTitleCase {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        core::fmt::Display::fmt(&self.0, f)
     }
 }
 
 // Copied out of the std library
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 enum CaseMappingIter {
     Three(char, char, char),
     Two(char, char),
@@ -446,9 +448,8 @@ impl DoubleEndedIterator for CaseMappingIter {
     }
 }
 
-#[cfg(feature = "std")]
-impl std::fmt::Display for CaseMappingIter {
-    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+impl Display for CaseMappingIter {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match *self {
             CaseMappingIter::Three(a, b, c) => {
                 f.write_char(a)?;
