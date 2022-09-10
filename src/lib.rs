@@ -2,7 +2,7 @@
 //! on [char] and [str] that adds title case handling methods. These methods are very similar to how
 //! the std library currently handles uppercase and lowercase.
 
-#![cfg_attr(not(feature = "std"), no_std)]
+#![no_std]
 #![deny(missing_docs)]
 #![deny(rustdoc::missing_doc_code_examples)]
 #![deny(unsafe_code)]
@@ -10,7 +10,7 @@
 extern crate alloc;
 
 use alloc::string::String;
-use core::fmt::{Debug, Formatter, Write};
+use core::fmt::{Debug, Display, Formatter, Result, Write};
 use core::iter::FusedIterator;
 
 include!(concat!(env!("OUT_DIR"), "/casing.rs"));
@@ -365,10 +365,9 @@ impl FusedIterator for ToTitleCase {}
 
 impl ExactSizeIterator for ToTitleCase {}
 
-#[cfg(feature = "std")]
-impl std::fmt::Display for ToTitleCase {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(&self.0, f)
+impl Display for ToTitleCase {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        core::fmt::Display::fmt(&self.0, f)
     }
 }
 
@@ -446,9 +445,8 @@ impl DoubleEndedIterator for CaseMappingIter {
     }
 }
 
-#[cfg(feature = "std")]
-impl std::fmt::Display for CaseMappingIter {
-    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+impl Display for CaseMappingIter {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match *self {
             CaseMappingIter::Three(a, b, c) => {
                 f.write_char(a)?;
