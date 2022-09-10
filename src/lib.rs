@@ -342,7 +342,7 @@ impl StrTitleCase for str {
 /// An iterator over a titlecase mapped char.
 ///
 /// Copied from the std library's [core::char::ToLowercase] and [core::char::ToUppercase].
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub struct ToTitleCase(CaseMappingIter);
 
 impl Iterator for ToTitleCase {
@@ -372,7 +372,7 @@ impl Display for ToTitleCase {
 }
 
 // Copied out of the std library
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Hash)]
 enum CaseMappingIter {
     Three(char, char, char),
     Two(char, char),
