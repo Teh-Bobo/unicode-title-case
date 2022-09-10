@@ -140,6 +140,21 @@ pub trait TitleCase {
     /// This function is specific to the tr and az locales. It returns different results for certain
     /// chars. To use locale agnostic version see [TitleCase::to_titlecase].
     fn to_titlecase_tr_or_az(self) -> ToTitleCase;
+
+    /// Returns true if the given character is a titlecase character. This function works for all locales
+    /// including tr and az.
+    /// # Examples
+    /// ```
+    /// use unicode_titlecase::TitleCase;
+    /// assert!('A'.is_titlecase());
+    /// assert!('ǅ'.is_titlecase());
+    /// assert!('İ'.is_titlecase());
+    ///
+    /// assert!(!'a'.is_titlecase());
+    /// assert!(!'Ǆ'.is_titlecase());
+    /// assert!(!'ﬄ'.is_titlecase());
+    /// ```
+    fn is_titlecase(&self) -> bool;
 }
 
 impl TitleCase for char {
@@ -149,6 +164,12 @@ impl TitleCase for char {
 
     fn to_titlecase_tr_or_az(self) -> ToTitleCase {
         ToTitleCase(CaseMappingIter::new(to_titlecase_tr_or_az(self)))
+    }
+
+    fn is_titlecase(&self) -> bool {
+        TITLECASE_TABLE
+            .binary_search_by(|&(key, _)| key.cmp(self))
+            .is_err()
     }
 }
 
@@ -228,6 +249,38 @@ pub trait StrTitleCase {
     ///
     /// For the locale agnostic version use [StrTitleCase::to_titlecase_lower_rest].
     fn to_titlecase_tr_or_az_lower_rest(&self) -> String;
+
+    /// Tests if the first char of this string is titlecase. This is locale agnostic and returns the
+    /// same values in the tr/az locales.
+    /// # Returns
+    /// True if the first character of the string is title case, ignoring the rest of the string.
+    /// False if first character is not title case or the string is empty.
+    /// # Examples
+    /// ```
+    /// use unicode_titlecase::StrTitleCase;
+    /// assert!("Abc".starts_titlecase());
+    /// assert!("ABC".starts_titlecase());
+    ///
+    /// assert!(!"abc".starts_titlecase());
+    /// ```
+    fn starts_titlecase(&self) -> bool;
+
+    /// Tests if the first char of this string is titlecase and the rest of the string is lowercase.
+    /// This is locale agnostic and returns the same values in the tr/az locales.
+    /// # Returns
+    /// True if the first character of the string is title case and the rest of the string is lowercase.
+    /// False if first character is not title case or the string is empty.
+    /// # Examples
+    /// ```
+    /// use unicode_titlecase::StrTitleCase;
+    /// assert!("Abc".starts_titlecase_rest_lower());
+    /// assert!("İbc".starts_titlecase_rest_lower());
+    ///
+    /// assert!(!"abc".starts_titlecase_rest_lower());
+    /// assert!(!"ABC".starts_titlecase_rest_lower());
+    /// assert!(!"İİ".starts_titlecase_rest_lower());
+    /// ```
+    fn starts_titlecase_rest_lower(&self) -> bool;
 }
 
 #[cfg(feature = "strings")]
@@ -266,6 +319,23 @@ impl StrTitleCase for str {
             .flat_map(TitleCase::to_titlecase_tr_or_az)
             .chain(iter.flat_map(char::to_lowercase))
             .collect()
+    }
+
+    fn starts_titlecase(&self) -> bool {
+        self.chars()
+            .next()
+            .as_ref()
+            .map(TitleCase::is_titlecase)
+            .unwrap_or(false)
+    }
+
+    fn starts_titlecase_rest_lower(&self) -> bool {
+        let mut iter = self.chars();
+        iter.next()
+            .as_ref()
+            .map(TitleCase::is_titlecase)
+            .unwrap_or(false)
+            && iter.all(char::is_lowercase)
     }
 }
 
