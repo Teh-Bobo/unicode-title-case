@@ -4,7 +4,7 @@ Unicode titlecasing operations for chars and strings. The crate supports additio
 functionality for the TR/AZ locales.
 ---
 [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/Teh-Bobo/unicode-title-case/Rust)](https://github.com/Teh-Bobo/unicode-title-case/actions)
-[![docs.rs](https://img.shields.io/docsrs/unicode_titlecase)](https://docs.rs/st_ring_buffer/1.1.0/unicode_titlecase/)
+[![docs.rs](https://img.shields.io/docsrs/unicode_titlecase)](https://docs.rs/unicode_titlecase/latest/unicode_titlecase/)
 ![Crates.io](https://img.shields.io/crates/l/unicode_titlecase)
 [![Crates.io](https://img.shields.io/crates/v/unicode_titlecase)](https://crates.io/crates/unicode_titlecase)
 ![](https://img.shields.io/badge/-no__std-green)
