@@ -1,6 +1,6 @@
 # Unicode Titlecase
 Unicode titlecasing operations for chars and strings. The crate supports has additional
-functionality to support the TR/AZ locale.
+functionality to support the TR/AZ locales.
 
 ## Installation
 
@@ -14,8 +14,7 @@ unicode_titlecase = "1.1.0"
 ## Features
 
 This crate is no_std capable. ```std``` is used for
-```std::Display``` on the iterators and for the "strings" feature. The "strings" feature
-enables functions that operation on Rust ```Strings```.
+```std::Display``` on the iterators, allowing the usage of ```to_string()```.
 
 ## Usage
 
@@ -44,7 +43,7 @@ assert_eq!('ﬄ'.to_titlecase().to_string(), "Ffl");
 
 ### Strings
 
-A similar trait is defined on ```str``` if the "strings" feature is enabled (by default). This
+A similar trait is defined on ```str```. This
 will titlecase the first char of the string, leave the rest unchanged, and return a newly
 allocated ```String```.
 
@@ -65,6 +64,41 @@ assert_eq!("ABC".to_titlecase_lower_rest(), "Abc");
 assert_eq!("ǄǄ".to_titlecase_lower_rest(), "ǅǆ");
 assert_eq!("ﬄabc".to_titlecase_lower_rest(), "Fflabc");
 ```
+
+### Testing a char or str
+
+To see if the char is already titlecase, ```is_titlecase``` is provided:
+
+```rust
+use unicode_titlecase::TitleCase;
+assert!('A'.is_titlecase());
+assert!('ǅ'.is_titlecase());
+assert!('İ'.is_titlecase());
+
+assert!(!'a'.is_titlecase());
+assert!(!'Ǆ'.is_titlecase());
+assert!(!'ﬄ'.is_titlecase());
+```
+
+To test if a str is already titlecase, two options are provided. The first, ```starts_titlecase```
+returns true if the first character is titlecased--ignoring the rest of the str. The second
+```starts_titlecase_rest_lower``` only returns true if the first char is titlecase and the rest
+of the str is lowercase.
+
+```rust
+use unicode_titlecase::StrTitleCase;
+assert!("Abc".starts_titlecase());
+assert!("ABC".starts_titlecase());
+assert!(!"abc".starts_titlecase());
+
+assert!("Abc".starts_titlecase_rest_lower());
+assert!("İbc".starts_titlecase_rest_lower());
+assert!(!"abc".starts_titlecase_rest_lower());
+assert!(!"ABC".starts_titlecase_rest_lower());
+assert!(!"İİ".starts_titlecase_rest_lower());
+```
+
+All testing functions work the same regardless of locale.
 
 ### Locale
 
