@@ -19,11 +19,6 @@ Add this to your `Cargo.toml`:
 unicode_titlecase = "1.1.0"
 ```
 
-## Features
-
-This crate is no_std capable. ```std``` is used for
-```std::Display``` on the iterators, allowing the usage of ```to_string()```.
-
 ## Usage
 
 ### Chars
