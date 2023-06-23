@@ -16,7 +16,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-unicode_titlecase = "2.0.0"
+unicode_titlecase = "2.0.1"
 ```
 
 ## Usage
