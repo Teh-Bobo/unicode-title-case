@@ -11,15 +11,6 @@ functionality for the TR/AZ locales.
 ![](https://img.shields.io/badge/-no__std-green)
 ![](https://img.shields.io/badge/-forbid__unsafe-green)
 
-## Installation
-
-Add this to your `Cargo.toml`:
-
-```toml
-[dependencies]
-unicode_titlecase = "2.1.0"
-```
-
 ## Usage
 
 ### Chars
