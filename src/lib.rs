@@ -247,11 +247,15 @@ pub trait StrTitleCase {
     /// For the locale agnostic version use [`StrTitleCase::to_titlecase`].
     fn to_titlecase_tr_or_az(&self) -> String;
     /// This functions the same way as [`StrTitleCase::to_titlecase_lower_rest`] except that it uses
-    /// the TR/AZ locales. This has one major change:
+    /// the TR/AZ locales. This has one major change, 'i' maps to 'İ':
     /// ```
     /// use unicode_titlecase::StrTitleCase;
-    /// assert_eq!("iIi".to_titlecase_tr_or_az_lower_rest(), "İii")
+    /// assert_eq!("iIiİ".to_titlecase_tr_or_az_lower_rest(), "İıii")
     /// ```
+    ///
+    /// When lowercasing in these locales there are a couple differences to note:
+    ///   1) 'I' maps to 'ı'--\u{0049} LATIN CAPITAL LETTER I -> \u{0131} LATIN SMALL LETTER DOTLESS I
+    ///   2) 'İ' maps to 'i'--\u{130} LATIN CAPITAL LETTER I WITH DOT ABOVE -> \u{0069} LATIN SMALL LETTER I
     ///
     /// For the locale agnostic version use [`StrTitleCase::to_titlecase_lower_rest`].
     fn to_titlecase_tr_or_az_lower_rest(&self) -> String;
@@ -322,7 +326,12 @@ impl StrTitleCase for str {
         iter.next()
             .into_iter()
             .flat_map(TitleCase::to_titlecase_tr_or_az)
-            .chain(iter.flat_map(char::to_lowercase))
+            .chain(iter.map(|c|
+                match c {
+                    '\u{0049}' => '\u{0131}',
+                    '\u{0130}' => '\u{0069}',
+                    _ => c
+                }).flat_map(char::to_lowercase))
             .collect()
     }
 
