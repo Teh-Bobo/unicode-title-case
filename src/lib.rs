@@ -250,7 +250,7 @@ pub trait StrTitleCase {
     /// the TR/AZ locales. This has one major change:
     /// ```
     /// use unicode_titlecase::StrTitleCase;
-    /// assert_eq!("iIi".to_titlecase_tr_or_az_lower_rest(), "İii")
+    /// assert_eq!("iIi".to_titlecase_tr_or_az_lower_rest(), "İıi")
     /// ```
     ///
     /// For the locale agnostic version use [`StrTitleCase::to_titlecase_lower_rest`].
@@ -322,7 +322,7 @@ impl StrTitleCase for str {
         iter.next()
             .into_iter()
             .flat_map(TitleCase::to_titlecase_tr_or_az)
-            .chain(iter.flat_map(char::to_lowercase))
+            .chain(iter.map(|c| if c == '\u{0049}' { '\u{0131}' } else { c }).flat_map(char::to_lowercase))
             .collect()
     }
 
