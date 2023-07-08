@@ -12,7 +12,7 @@ extern crate alloc;
 
 use alloc::string::String;
 use core::fmt::{Debug, Display, Formatter, Result, Write};
-use core::iter::FusedIterator;
+use core::iter::{FusedIterator, once};
 
 include!(concat!(env!("OUT_DIR"), "/casing.rs"));
 
@@ -86,6 +86,17 @@ pub fn to_titlecase_tr_or_az(c: char) -> [char; 3] {
     } else {
         to_titlecase(c)
     }
+}
+
+#[must_use]
+pub fn to_lowercase_tr_or_az(c: char) -> impl Iterator<Item=char> {
+    once(c)
+        .map(|c| match c {
+            '\u{0049}' => '\u{0131}',
+            '\u{0130}' => '\u{0069}',
+            _ => c,
+        })
+        .flat_map(char::to_lowercase)
 }
 
 /// This trait adds title case methods to [`char`]. They function the same as the std library's
@@ -177,6 +188,21 @@ impl TitleCase for char {
         TITLECASE_TABLE
             .binary_search_by(|&(key, _)| key.cmp(self))
             .is_err()
+    }
+}
+
+pub trait LowerCaseTrAz {
+    fn to_lowercase_tr_az<I>(self) -> I where I: Iterator<Item=char>;
+    fn is_lowercase_tr_az(&self) -> bool;
+}
+
+impl LowerCaseTrAz for char {
+    fn to_lowercase_tr_az<I>(self) -> I where I: Iterator<Item=char> {
+        to_lowercase_tr_or_az(self)
+    }
+
+    fn is_lowercase_tr_az(&self) -> bool {
+        self.is_lowercase() || self == '\u{0131}' || self == '\u{0069}'
     }
 }
 
@@ -326,12 +352,7 @@ impl StrTitleCase for str {
         iter.next()
             .into_iter()
             .flat_map(TitleCase::to_titlecase_tr_or_az)
-            .chain(iter.map(|c|
-                match c {
-                    '\u{0049}' => '\u{0131}',
-                    '\u{0130}' => '\u{0069}',
-                    _ => c
-                }).flat_map(char::to_lowercase))
+            .chain(iter.flat_map(to_lowercase_tr_or_az))
             .collect()
     }
 
@@ -348,6 +369,21 @@ impl StrTitleCase for str {
             .as_ref()
             .map_or(false, TitleCase::is_titlecase)
             && iter.all(char::is_lowercase)
+    }
+}
+
+pub trait StrLowerCaseTrAz {
+    fn to_lowercase_tr_az(&self) -> String;
+    fn is_lowercase_tr_az(&self) -> bool;
+}
+
+impl StrLowerCaseTrAz for str {
+    fn to_lowercase_tr_az(&self) -> String {
+        self.chars().flat_map(to_lowercase_tr_or_az).collect()
+    }
+
+    fn is_lowercase_tr_az(&self) -> bool {
+        self.chars().all(|c| c.is_lowercase_tr_az())
     }
 }
 
