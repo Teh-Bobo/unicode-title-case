@@ -6,4 +6,4 @@ authors = ["Carl Raffaele"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/Teh-Bobo/unicode-title-case"
-description = "A crate to add Unicode titlecase options to chars and strings"
+description = "A crate to add Unicode titlecase and Turkish and Azeri locale upper/lowercase utilities to chars and strings"
