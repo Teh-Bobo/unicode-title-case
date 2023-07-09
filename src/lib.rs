@@ -89,14 +89,14 @@ pub fn to_titlecase_tr_or_az(c: char) -> [char; 3] {
 }
 
 #[must_use]
-pub fn to_lowercase_tr_or_az(c: char) -> impl Iterator<Item=char> {
-    once(c)
+pub fn to_lowercase_tr_or_az(c: char) -> TrAzCaseMapper {
+    TrAzCaseMapper::new(once(c)
         .map(|c| match c {
             '\u{0049}' => '\u{0131}',
             '\u{0130}' => '\u{0069}',
             _ => c,
         })
-        .flat_map(char::to_lowercase)
+        .flat_map(char::to_lowercase))
 }
 
 /// This trait adds title case methods to [`char`]. They function the same as the std library's
@@ -192,12 +192,12 @@ impl TitleCase for char {
 }
 
 pub trait LowerCaseTrAz {
-    fn to_lowercase_tr_az<I>(self) -> I where I: Iterator<Item=char>;
+    fn to_lowercase_tr_az(self) -> TrAzCaseMapper;
     fn is_lowercase_tr_az(&self) -> bool;
 }
 
 impl LowerCaseTrAz for char {
-    fn to_lowercase_tr_az<I>(self) -> I where I: Iterator<Item=char> {
+    fn to_lowercase_tr_az(self) -> TrAzCaseMapper {
         to_lowercase_tr_or_az(self)
     }
 
@@ -414,6 +414,44 @@ impl FusedIterator for ToTitleCase {}
 impl ExactSizeIterator for ToTitleCase {}
 
 impl Display for ToTitleCase {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        core::fmt::Display::fmt(&self.0, f)
+    }
+}
+
+/// An iterator over a titlecase mapped char.
+///
+/// Copied from the std library's [`core::char::ToLowercase`] and [`core::char::ToUppercase`].
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+pub struct TrAzCaseMapper(CaseMappingIter);
+
+impl TrAzCaseMapper {
+    fn new(mut chars: impl Iterator<Item=char>) -> Self {
+        TrAzCaseMapper(CaseMappingIter::new([chars.next().unwrap_or('\0'), chars.next().unwrap_or('\0'), chars.next().unwrap_or('\0'), ]))
+    }
+}
+
+impl Iterator for TrAzCaseMapper {
+    type Item = char;
+    fn next(&mut self) -> Option<char> {
+        self.0.next()
+    }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.0.size_hint()
+    }
+}
+
+impl DoubleEndedIterator for TrAzCaseMapper {
+    fn next_back(&mut self) -> Option<char> {
+        self.0.next_back()
+    }
+}
+
+impl FusedIterator for TrAzCaseMapper {}
+
+impl ExactSizeIterator for TrAzCaseMapper {}
+
+impl Display for TrAzCaseMapper {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         core::fmt::Display::fmt(&self.0, f)
     }
