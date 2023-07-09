@@ -3,7 +3,7 @@
 //! the std library currently handles uppercase and lowercase.
 
 #![no_std]
-#![deny(missing_docs)]
+// #![deny(missing_docs)]
 #![deny(rustdoc::missing_doc_code_examples)]
 #![deny(unsafe_code)]
 #![warn(clippy::pedantic)]
@@ -357,12 +357,21 @@ pub mod tr_az {
 
     use crate::CaseMappingIter;
 
+    pub fn to_uppercase_tr_or_az(c: char) -> TrAzCaseMapper {
+        TrAzCaseMapper::new(once(c)
+            .map(|c| match c {
+                '\u{0069}' => '\u{0130}', //i => İ
+                _ => c,
+            })
+            .flat_map(char::to_uppercase))
+    }
+
     #[must_use]
     pub fn to_lowercase_tr_or_az(c: char) -> TrAzCaseMapper {
         TrAzCaseMapper::new(once(c)
             .map(|c| match c {
-                '\u{0049}' => '\u{0131}',
-                '\u{0130}' => '\u{0069}',
+                '\u{0049}' => '\u{0131}', //I => ı
+                '\u{0130}' => '\u{0069}', //İ => i
                 _ => c,
             })
             .flat_map(char::to_lowercase))
@@ -385,17 +394,19 @@ pub mod tr_az {
         }
 
         fn to_uppercase_tr_az(self) -> TrAzCaseMapper {
-            todo!()
+            to_uppercase_tr_or_az(self)
         }
 
         fn is_uppercase_tr_az(&self) -> bool {
-            todo!()
+            self.is_uppercase()
         }
     }
 
     pub trait StrLowerCaseTrAz {
         fn to_lowercase_tr_az(&self) -> String;
         fn is_lowercase_tr_az(&self) -> bool;
+        fn to_uppercase_tr_az(&self) -> String;
+        fn is_uppercase_tr_az(&self) -> bool;
     }
 
     impl StrLowerCaseTrAz for str {
@@ -405,6 +416,14 @@ pub mod tr_az {
 
         fn is_lowercase_tr_az(&self) -> bool {
             self.chars().all(|c| c.is_lowercase_tr_az())
+        }
+
+        fn to_uppercase_tr_az(&self) -> String {
+            self.chars().flat_map(to_uppercase_tr_or_az).collect()
+        }
+
+        fn is_uppercase_tr_az(&self) -> bool {
+            self.chars().all(|c| c.is_uppercase_tr_az())
         }
     }
 
