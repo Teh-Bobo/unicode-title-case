@@ -202,7 +202,7 @@ impl LowerCaseTrAz for char {
     }
 
     fn is_lowercase_tr_az(&self) -> bool {
-        self.is_lowercase() || self == '\u{0131}' || self == '\u{0069}'
+        self.is_lowercase()
     }
 }
 
