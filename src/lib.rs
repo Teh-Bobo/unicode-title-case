@@ -357,6 +357,16 @@ pub mod tr_az {
 
     use crate::CaseMappingIter;
 
+    /// Accepts a char and returns the Unicode Upper Case in the TR/AZ locale for that character as a an iterator.
+    ///
+    /// # Examples
+    /// ```
+    /// use unicode_titlecase::tr_az::to_uppercase_tr_or_az;
+    /// assert_eq!(to_uppercase_tr_or_az('i').to_string(), "İ");
+    /// assert_eq!(to_uppercase_tr_or_az('a').to_string(), "A");
+    /// assert_eq!(to_uppercase_tr_or_az('ﬀ').to_string(), "FF");
+    /// ```
+    #[must_use]
     pub fn to_uppercase_tr_or_az(c: char) -> TrAzCaseMapper {
         TrAzCaseMapper::new(once(c)
             .map(|c| match c {
@@ -366,6 +376,15 @@ pub mod tr_az {
             .flat_map(char::to_uppercase))
     }
 
+    /// Accepts a char and returns the Unicode Lower Case in the TR/AZ locale for that character as a an iterator.
+    ///
+    /// # Examples
+    /// ```
+    /// use unicode_titlecase::tr_az::to_lowercase_tr_or_az;
+    /// assert_eq!(to_lowercase_tr_or_az('İ').to_string(), "i");
+    /// assert_eq!(to_lowercase_tr_or_az('I').to_string(), "ı");
+    /// assert_eq!(to_lowercase_tr_or_az('A').to_string(), "a");
+    /// ```
     #[must_use]
     pub fn to_lowercase_tr_or_az(c: char) -> TrAzCaseMapper {
         TrAzCaseMapper::new(once(c)
