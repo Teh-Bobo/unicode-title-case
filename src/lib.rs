@@ -12,7 +12,9 @@ extern crate alloc;
 
 use alloc::string::String;
 use core::fmt::{Debug, Display, Formatter, Result, Write};
-use core::iter::{FusedIterator, once};
+use core::iter::FusedIterator;
+
+use crate::tr_az::to_lowercase_tr_or_az;
 
 include!(concat!(env!("OUT_DIR"), "/casing.rs"));
 
@@ -86,17 +88,6 @@ pub fn to_titlecase_tr_or_az(c: char) -> [char; 3] {
     } else {
         to_titlecase(c)
     }
-}
-
-#[must_use]
-pub fn to_lowercase_tr_or_az(c: char) -> TrAzCaseMapper {
-    TrAzCaseMapper::new(once(c)
-        .map(|c| match c {
-            '\u{0049}' => '\u{0131}',
-            '\u{0130}' => '\u{0069}',
-            _ => c,
-        })
-        .flat_map(char::to_lowercase))
 }
 
 /// This trait adds title case methods to [`char`]. They function the same as the std library's
@@ -191,20 +182,7 @@ impl TitleCase for char {
     }
 }
 
-pub trait LowerCaseTrAz {
-    fn to_lowercase_tr_az(self) -> TrAzCaseMapper;
-    fn is_lowercase_tr_az(&self) -> bool;
-}
 
-impl LowerCaseTrAz for char {
-    fn to_lowercase_tr_az(self) -> TrAzCaseMapper {
-        to_lowercase_tr_or_az(self)
-    }
-
-    fn is_lowercase_tr_az(&self) -> bool {
-        self.is_lowercase()
-    }
-}
 
 /// Trait to add titlecase operations to Strings and string slices. Both locale agnostic and TR/AZ
 /// versions of the functions are supplied.
@@ -372,18 +350,100 @@ impl StrTitleCase for str {
     }
 }
 
-pub trait StrLowerCaseTrAz {
-    fn to_lowercase_tr_az(&self) -> String;
-    fn is_lowercase_tr_az(&self) -> bool;
-}
+pub mod tr_az {
+    use alloc::string::String;
+    use core::fmt::{Display, Formatter, Result};
+    use core::iter::{FusedIterator, once};
 
-impl StrLowerCaseTrAz for str {
-    fn to_lowercase_tr_az(&self) -> String {
-        self.chars().flat_map(to_lowercase_tr_or_az).collect()
+    use crate::CaseMappingIter;
+
+    #[must_use]
+    pub fn to_lowercase_tr_or_az(c: char) -> TrAzCaseMapper {
+        TrAzCaseMapper::new(once(c)
+            .map(|c| match c {
+                '\u{0049}' => '\u{0131}',
+                '\u{0130}' => '\u{0069}',
+                _ => c,
+            })
+            .flat_map(char::to_lowercase))
     }
 
-    fn is_lowercase_tr_az(&self) -> bool {
-        self.chars().all(|c| c.is_lowercase_tr_az())
+    pub trait LowerCaseTrAz {
+        fn to_lowercase_tr_az(self) -> TrAzCaseMapper;
+        fn is_lowercase_tr_az(&self) -> bool;
+        fn to_uppercase_tr_az(self) -> TrAzCaseMapper;
+        fn is_uppercase_tr_az(&self) -> bool;
+    }
+
+    impl LowerCaseTrAz for char {
+        fn to_lowercase_tr_az(self) -> TrAzCaseMapper {
+            to_lowercase_tr_or_az(self)
+        }
+
+        fn is_lowercase_tr_az(&self) -> bool {
+            self.is_lowercase()
+        }
+
+        fn to_uppercase_tr_az(self) -> TrAzCaseMapper {
+            todo!()
+        }
+
+        fn is_uppercase_tr_az(&self) -> bool {
+            todo!()
+        }
+    }
+
+    pub trait StrLowerCaseTrAz {
+        fn to_lowercase_tr_az(&self) -> String;
+        fn is_lowercase_tr_az(&self) -> bool;
+    }
+
+    impl StrLowerCaseTrAz for str {
+        fn to_lowercase_tr_az(&self) -> String {
+            self.chars().flat_map(to_lowercase_tr_or_az).collect()
+        }
+
+        fn is_lowercase_tr_az(&self) -> bool {
+            self.chars().all(|c| c.is_lowercase_tr_az())
+        }
+    }
+
+    /// An iterator over a titlecase mapped char.
+    ///
+    /// Copied from the std library's [`core::char::ToLowercase`] and [`core::char::ToUppercase`].
+    #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+    pub struct TrAzCaseMapper(CaseMappingIter);
+
+    impl TrAzCaseMapper {
+        fn new(mut chars: impl Iterator<Item=char>) -> Self {
+            TrAzCaseMapper(CaseMappingIter::new([chars.next().unwrap_or('\0'), chars.next().unwrap_or('\0'), chars.next().unwrap_or('\0'), ]))
+        }
+    }
+
+    impl Iterator for TrAzCaseMapper {
+        type Item = char;
+        fn next(&mut self) -> Option<char> {
+            self.0.next()
+        }
+        fn size_hint(&self) -> (usize, Option<usize>) {
+            self.0.size_hint()
+        }
+    }
+
+    impl DoubleEndedIterator for TrAzCaseMapper {
+        fn next_back(&mut self) -> Option<char> {
+            self.0.next_back()
+        }
+    }
+
+    impl FusedIterator for TrAzCaseMapper {}
+
+    impl ExactSizeIterator for TrAzCaseMapper {}
+
+    impl Display for TrAzCaseMapper {
+        fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+            core::fmt::Display::fmt(&self.0, f)
+        }
     }
 }
 
@@ -414,44 +474,6 @@ impl FusedIterator for ToTitleCase {}
 impl ExactSizeIterator for ToTitleCase {}
 
 impl Display for ToTitleCase {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        core::fmt::Display::fmt(&self.0, f)
-    }
-}
-
-/// An iterator over a titlecase mapped char.
-///
-/// Copied from the std library's [`core::char::ToLowercase`] and [`core::char::ToUppercase`].
-#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
-pub struct TrAzCaseMapper(CaseMappingIter);
-
-impl TrAzCaseMapper {
-    fn new(mut chars: impl Iterator<Item=char>) -> Self {
-        TrAzCaseMapper(CaseMappingIter::new([chars.next().unwrap_or('\0'), chars.next().unwrap_or('\0'), chars.next().unwrap_or('\0'), ]))
-    }
-}
-
-impl Iterator for TrAzCaseMapper {
-    type Item = char;
-    fn next(&mut self) -> Option<char> {
-        self.0.next()
-    }
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.0.size_hint()
-    }
-}
-
-impl DoubleEndedIterator for TrAzCaseMapper {
-    fn next_back(&mut self) -> Option<char> {
-        self.0.next_back()
-    }
-}
-
-impl FusedIterator for TrAzCaseMapper {}
-
-impl ExactSizeIterator for TrAzCaseMapper {}
-
-impl Display for TrAzCaseMapper {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         core::fmt::Display::fmt(&self.0, f)
     }
