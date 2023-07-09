@@ -183,7 +183,6 @@ impl TitleCase for char {
 }
 
 
-
 /// Trait to add titlecase operations to Strings and string slices. Both locale agnostic and TR/AZ
 /// versions of the functions are supplied.
 pub trait StrTitleCase {
@@ -330,7 +329,7 @@ impl StrTitleCase for str {
         iter.next()
             .into_iter()
             .flat_map(TitleCase::to_titlecase_tr_or_az)
-            .chain(iter.flat_map(to_lowercase_tr_or_az))
+            .chain(iter.map(to_lowercase_tr_or_az))
             .collect()
     }
 
@@ -381,30 +380,34 @@ pub mod tr_az {
     /// # Examples
     /// ```
     /// use unicode_titlecase::tr_az::to_lowercase_tr_or_az;
-    /// assert_eq!(to_lowercase_tr_or_az('İ').to_string(), "i");
-    /// assert_eq!(to_lowercase_tr_or_az('I').to_string(), "ı");
-    /// assert_eq!(to_lowercase_tr_or_az('A').to_string(), "a");
+    /// assert_eq!(to_lowercase_tr_or_az('İ'), 'i');
+    /// assert_eq!(to_lowercase_tr_or_az('I'), 'ı');
+    /// assert_eq!(to_lowercase_tr_or_az('A'), 'a');
     /// ```
+    /// # Implementation Note
+    /// This function is able to return a char instead of an iterator because the TR/AZ locales
+    /// don't have any characters that map to multiple lowercase characters. If that ever changes
+    /// then this function will have to change to an iterator and have a corresponding bump in the
+    /// major version of the crate. A change like that seems unlikely enough to warrant this risk
+    /// and optimization.
     #[must_use]
-    pub fn to_lowercase_tr_or_az(c: char) -> TrAzCaseMapper {
-        TrAzCaseMapper::new(once(c)
-            .map(|c| match c {
-                '\u{0049}' => '\u{0131}', //I => ı
-                '\u{0130}' => '\u{0069}', //İ => i
-                _ => c,
-            })
-            .flat_map(char::to_lowercase))
+    pub fn to_lowercase_tr_or_az(c: char) -> char {
+        match c {
+            '\u{0049}' => '\u{0131}', //I => ı
+            '\u{0130}' => '\u{0069}', //İ => i
+            _ => c.to_lowercase().next().unwrap(), //safe because to_lowercase will at least return c
+        }
     }
 
     pub trait LowerCaseTrAz {
-        fn to_lowercase_tr_az(self) -> TrAzCaseMapper;
+        fn to_lowercase_tr_az(self) -> char;
         fn is_lowercase_tr_az(&self) -> bool;
         fn to_uppercase_tr_az(self) -> TrAzCaseMapper;
         fn is_uppercase_tr_az(&self) -> bool;
     }
 
     impl LowerCaseTrAz for char {
-        fn to_lowercase_tr_az(self) -> TrAzCaseMapper {
+        fn to_lowercase_tr_az(self) -> char {
             to_lowercase_tr_or_az(self)
         }
 
@@ -430,7 +433,7 @@ pub mod tr_az {
 
     impl StrLowerCaseTrAz for str {
         fn to_lowercase_tr_az(&self) -> String {
-            self.chars().flat_map(to_lowercase_tr_or_az).collect()
+            self.chars().map(to_lowercase_tr_or_az).collect()
         }
 
         fn is_lowercase_tr_az(&self) -> bool {
