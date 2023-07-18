@@ -14,10 +14,17 @@ use alloc::string::String;
 use core::fmt::{Debug, Display, Formatter, Result, Write};
 use core::iter::FusedIterator;
 
+// This function was originally in the main module but was moved
+// to tr_az in 2.2.0. This re-export exists to avoid a major change.
+// It should be removed and a part of the next major version.
+pub use tr_az::to_titlecase_tr_or_az;
+
+use crate::tr_az::to_lowercase_tr_or_az;
+
 include!(concat!(env!("OUT_DIR"), "/casing.rs"));
 
 #[allow(clippy::doc_link_with_quotes)]
-/// Accepts a char and returns the Unicode Title Case for that character as a 3 char array.
+/// Accepts a char and returns the Unicode title case for that character as a 3 char array.
 ///
 /// # Examples
 /// If the character is already titlecase then it will return itself:
@@ -49,42 +56,6 @@ pub fn to_titlecase(c: char) -> [char; 3] {
         TITLECASE_TABLE[index].1
     } else {
         [c, '\0', '\0']
-    }
-}
-
-#[allow(clippy::doc_link_with_quotes)]
-/// Accepts a char and returns the Unicode Title Case for that character as a 3 char array.
-///
-/// # Examples
-/// If the character is already titlecase then it will return itself:
-/// ```
-/// use unicode_titlecase::to_titlecase_tr_or_az;
-/// assert_eq!(to_titlecase_tr_or_az('A'), ['A', '\0', '\0']);
-/// ```
-/// Single-char characters are mapped:
-/// ```
-/// use unicode_titlecase::to_titlecase_tr_or_az;
-/// assert_eq!(to_titlecase_tr_or_az('Ǆ'), ['ǅ', '\0', '\0']);
-/// ```
-/// Multi-char ligatures are converted:
-/// ```
-/// use unicode_titlecase::to_titlecase_tr_or_az;
-/// assert_eq!(to_titlecase_tr_or_az('ﬄ'), ['F', 'f', 'l']);
-/// ```
-/// Locale is tr/az:
-/// ```
-/// use unicode_titlecase::to_titlecase_tr_or_az;
-/// assert_eq!(to_titlecase_tr_or_az('i'), ['İ', '\0', '\0']);
-/// ```
-/// # Locale
-/// This function is specific to the tr and az locales. It returns different results for certain
-/// chars. To use locale agnostic version see [`to_titlecase`].
-#[must_use]
-pub fn to_titlecase_tr_or_az(c: char) -> [char; 3] {
-    if c == '\u{0069}' {
-        ['\u{0130}', '\0', '\0']
-    } else {
-        to_titlecase(c)
     }
 }
 
@@ -179,6 +150,7 @@ impl TitleCase for char {
             .is_err()
     }
 }
+
 
 /// Trait to add titlecase operations to Strings and string slices. Both locale agnostic and TR/AZ
 /// versions of the functions are supplied.
@@ -326,12 +298,7 @@ impl StrTitleCase for str {
         iter.next()
             .into_iter()
             .flat_map(TitleCase::to_titlecase_tr_or_az)
-            .chain(iter.map(|c|
-                match c {
-                    '\u{0049}' => '\u{0131}',
-                    '\u{0130}' => '\u{0069}',
-                    _ => c
-                }).flat_map(char::to_lowercase))
+            .chain(iter.map(to_lowercase_tr_or_az))
             .collect()
     }
 
@@ -348,6 +315,265 @@ impl StrTitleCase for str {
             .as_ref()
             .map_or(false, TitleCase::is_titlecase)
             && iter.all(char::is_lowercase)
+    }
+}
+
+/// A module to supply TR/AZ locale specific upper and lower case utilities.
+pub mod tr_az {
+    use alloc::string::String;
+    use core::fmt::{Display, Formatter, Result};
+    use core::iter::{FusedIterator, once};
+
+    use crate::{CaseMappingIter, to_titlecase};
+
+    /// Accepts a char and returns the Unicode upper case in the TR/AZ locale for that character as a an iterator.
+    ///
+    /// # Examples
+    /// ```
+    /// use unicode_titlecase::tr_az::to_uppercase_tr_or_az;
+    /// assert_eq!(to_uppercase_tr_or_az('i').to_string(), "İ");
+    /// assert_eq!(to_uppercase_tr_or_az('a').to_string(), "A");
+    /// assert_eq!(to_uppercase_tr_or_az('ﬀ').to_string(), "FF");
+    /// ```
+    #[must_use]
+    pub fn to_uppercase_tr_or_az(c: char) -> TrAzCaseMapper {
+        TrAzCaseMapper::new(once(c)
+            .map(|c| match c {
+                '\u{0069}' => '\u{0130}', //i => İ
+                _ => c,
+            })
+            .flat_map(char::to_uppercase))
+    }
+
+    /// Accepts a char and returns the Unicode lower case in the TR/AZ locale for that character.
+    ///
+    /// # Examples
+    /// ```
+    /// use unicode_titlecase::tr_az::to_lowercase_tr_or_az;
+    /// assert_eq!(to_lowercase_tr_or_az('İ'), 'i');
+    /// assert_eq!(to_lowercase_tr_or_az('I'), 'ı');
+    /// assert_eq!(to_lowercase_tr_or_az('A'), 'a');
+    /// ```
+    /// # Implementation Note
+    /// This function is able to return a char instead of an iterator because the TR/AZ locales
+    /// don't have any characters that map to multiple lowercase characters. If that ever changes
+    /// then this function will have to change to an iterator and have a corresponding bump in the
+    /// major version of the crate. A change like that seems unlikely enough to warrant this risk
+    /// and optimization.
+    #[must_use]
+    pub fn to_lowercase_tr_or_az(c: char) -> char {
+        match c {
+            '\u{0049}' => '\u{0131}', //I => ı
+            '\u{0130}' => '\u{0069}', //İ => i
+            _ => c.to_lowercase().next().unwrap(), //safe because to_lowercase will at least return c
+        }
+    }
+
+    #[allow(clippy::doc_link_with_quotes)]
+    /// Accepts a char and returns the Unicode title case for that character as a 3 char array.
+    ///
+    /// # Examples
+    /// If the character is already titlecase then it will return itself:
+    /// ```
+    /// use unicode_titlecase::to_titlecase_tr_or_az;
+    /// assert_eq!(to_titlecase_tr_or_az('A'), ['A', '\0', '\0']);
+    /// ```
+    /// Single-char characters are mapped:
+    /// ```
+    /// use unicode_titlecase::to_titlecase_tr_or_az;
+    /// assert_eq!(to_titlecase_tr_or_az('Ǆ'), ['ǅ', '\0', '\0']);
+    /// ```
+    /// Multi-char ligatures are converted:
+    /// ```
+    /// use unicode_titlecase::to_titlecase_tr_or_az;
+    /// assert_eq!(to_titlecase_tr_or_az('ﬄ'), ['F', 'f', 'l']);
+    /// ```
+    /// Locale is tr/az:
+    /// ```
+    /// use unicode_titlecase::to_titlecase_tr_or_az;
+    /// assert_eq!(to_titlecase_tr_or_az('i'), ['İ', '\0', '\0']);
+    /// ```
+    /// # Locale
+    /// This function is specific to the tr and az locales. It returns different results for certain
+    /// chars. To use locale agnostic version see [`to_titlecase`].
+    #[must_use]
+    pub fn to_titlecase_tr_or_az(c: char) -> [char; 3] {
+        if c == '\u{0069}' {
+            ['\u{0130}', '\0', '\0']
+        } else {
+            to_titlecase(c)
+        }
+    }
+
+    /// This trait provides functions to perform lower and upper case transformations on a char in
+    /// the TR/AZ locale.
+    pub trait TrAzCasing {
+        /// Returns the Unicode lower case of this char in the TR/AZ locale.
+        ///
+        /// # Examples
+        /// ```
+        /// use unicode_titlecase::tr_az::TrAzCasing;
+        /// assert_eq!('İ'.to_lowercase_tr_az(), 'i');
+        /// assert_eq!('I'.to_lowercase_tr_az(), 'ı');
+        /// assert_eq!('A'.to_lowercase_tr_az(), 'a');
+        /// assert_eq!('b'.to_lowercase_tr_az(), 'b');
+        /// ```
+        /// # Implementation Note
+        /// This function is able to return a char instead of an iterator because the TR/AZ locales
+        /// don't have any characters that map to multiple lowercase characters. If that ever changes
+        /// then this function will have to change to an iterator and have a corresponding bump in the
+        /// major version of the crate. A change like that seems unlikely enough to warrant this risk
+        /// and optimization.
+        fn to_lowercase_tr_az(self) -> char;
+
+        /// Returns true if this char is lowercase as defined by the Unicode standard and false otherwise.
+        ///
+        /// This function is included for completeness. It is currently equivalent to char's is_lowercase().
+        fn is_lowercase_tr_az(&self) -> bool;
+
+        /// Returns the Unicode upper case of this char in the TR/AZ locale as an iterator.
+        ///
+        /// # Examples
+        /// ```
+        /// use unicode_titlecase::tr_az::TrAzCasing;
+        /// assert_eq!('i'.to_uppercase_tr_az().to_string(), "İ");
+        /// assert_eq!('ı'.to_uppercase_tr_az().to_string(), "I");
+        /// assert_eq!('a'.to_uppercase_tr_az().to_string(), "A");
+        /// assert_eq!('B'.to_uppercase_tr_az().to_string(), "B");
+        /// ```
+        fn to_uppercase_tr_az(self) -> TrAzCaseMapper;
+
+        /// Returns true if this char is uppercase as defined by the Unicode standard and false otherwise.
+        ///
+        /// This function is included for completeness. It is currently equivalent to char's is_uppercase().
+        fn is_uppercase_tr_az(&self) -> bool;
+    }
+
+    impl TrAzCasing for char {
+        fn to_lowercase_tr_az(self) -> char {
+            to_lowercase_tr_or_az(self)
+        }
+
+        fn is_lowercase_tr_az(&self) -> bool {
+            self.is_lowercase()
+        }
+
+        fn to_uppercase_tr_az(self) -> TrAzCaseMapper {
+            to_uppercase_tr_or_az(self)
+        }
+
+        fn is_uppercase_tr_az(&self) -> bool {
+            self.is_uppercase()
+        }
+    }
+
+    /// This trait provides functions to perform lower and upper case transformations on a str in
+    /// the TR/AZ locale.
+    pub trait StrTrAzCasing {
+        /// Returns the Unicode lower case of this str in the TR/AZ locale as a new String.
+        ///
+        /// # Examples
+        /// ```
+        /// use unicode_titlecase::tr_az::StrTrAzCasing;
+        /// assert_eq!("İIAb".to_lowercase_tr_az(), "iıab");
+        /// ```
+        fn to_lowercase_tr_az(&self) -> String;
+
+        /// Returns true if every char in this str is lowercase, false otherwise.
+        ///
+        /// # Examples
+        /// ```
+        /// use unicode_titlecase::tr_az::StrTrAzCasing;
+        /// assert!("abc".is_lowercase_tr_az());
+        /// assert!("iı".is_lowercase_tr_az());
+        /// ```
+        ///
+        /// # Special Case
+        /// If you lowercase an 'İ' using a non-TR locale function then it will be converted into
+        /// "i\u{0307}" where U+0307 is Combining Dot Above per the Unicode special casing rules.
+        /// The U+0307 char is not considered lowercase. To avoid this issue do not mix the tr/az and locale agnostic functions.
+        /// ```
+        /// use unicode_titlecase::tr_az::StrTrAzCasing;
+        /// assert!("İ".to_lowercase_tr_az().is_lowercase_tr_az()); //Using TR/AZ lowercasing
+        /// assert!(!"İ".to_lowercase().is_lowercase_tr_az()); //WRONG: Using std lib lowercasing
+        /// ```
+        fn is_lowercase_tr_az(&self) -> bool;
+
+        /// Returns the Unicode upper case of this str in the TR/AZ locale.
+        ///
+        /// # Examples
+        /// ```
+        /// use unicode_titlecase::tr_az::StrTrAzCasing;
+        /// assert_eq!("iıab".to_uppercase_tr_az(), "İIAB");
+        /// ```
+        fn to_uppercase_tr_az(&self) -> String;
+
+        /// Returns true if every char in this str is uppercase, false otherwise.
+        ///
+        /// # Examples
+        /// ```
+        /// use unicode_titlecase::tr_az::StrTrAzCasing;
+        /// assert!("ABC".is_uppercase_tr_az());
+        /// assert!("İI".is_uppercase_tr_az());
+        /// ```
+        ///
+        fn is_uppercase_tr_az(&self) -> bool;
+    }
+
+    impl StrTrAzCasing for str {
+        fn to_lowercase_tr_az(&self) -> String {
+            self.chars().map(to_lowercase_tr_or_az).collect()
+        }
+
+        fn is_lowercase_tr_az(&self) -> bool {
+            self.chars().all(|c| c.is_lowercase_tr_az())
+        }
+
+        fn to_uppercase_tr_az(&self) -> String {
+            self.chars().flat_map(to_uppercase_tr_or_az).collect()
+        }
+
+        fn is_uppercase_tr_az(&self) -> bool {
+            self.chars().all(|c| c.is_uppercase_tr_az())
+        }
+    }
+
+    /// An iterator over a char that had its casing changed.
+    ///
+    /// Copied from the std library's [`core::char::ToLowercase`] and [`core::char::ToUppercase`].
+    #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+    pub struct TrAzCaseMapper(CaseMappingIter);
+
+    impl TrAzCaseMapper {
+        fn new(mut chars: impl Iterator<Item=char>) -> Self {
+            TrAzCaseMapper(CaseMappingIter::new([chars.next().unwrap_or('\0'), chars.next().unwrap_or('\0'), chars.next().unwrap_or('\0'), ]))
+        }
+    }
+
+    impl Iterator for TrAzCaseMapper {
+        type Item = char;
+        fn next(&mut self) -> Option<char> {
+            self.0.next()
+        }
+        fn size_hint(&self) -> (usize, Option<usize>) {
+            self.0.size_hint()
+        }
+    }
+
+    impl DoubleEndedIterator for TrAzCaseMapper {
+        fn next_back(&mut self) -> Option<char> {
+            self.0.next_back()
+        }
+    }
+
+    impl FusedIterator for TrAzCaseMapper {}
+
+    impl ExactSizeIterator for TrAzCaseMapper {}
+
+    impl Display for TrAzCaseMapper {
+        fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+            core::fmt::Display::fmt(&self.0, f)
+        }
     }
 }
 
@@ -494,4 +720,16 @@ mod tests {
             last = *cp;
         });
     }
+}
+
+// Thanks to https://github.com/rust-lang/cargo/issues/383#issuecomment-720873790
+#[cfg(doctest)]
+mod test_readme {
+    macro_rules! external_doc_test {
+        ($x:expr) => {
+            #[doc = $x]
+            extern {}
+        };
+    }
+    external_doc_test!(include_str!("../README.md"));
 }

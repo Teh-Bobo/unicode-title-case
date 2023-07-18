@@ -97,16 +97,26 @@ All testing functions work the same regardless of locale.
 
 ### Locale
 
-The TR and AZ locales have different rules for how to titlecase certain characters.
+The Turkish and Azeri (TR/AZ) locales have different rules for how to titlecase certain characters.
 The ```to_titlecase``` functions assume the locale is neither of these locations. A "tr_or_az"
 version of each function is provided instead.
 
 ```rust
-use unicode_titlecase::{to_titlecase_tr_or_az, StrTitleCase};
+use unicode_titlecase::{to_titlecase_tr_or_az, StrTitleCase, TitleCase};
 assert_eq!(to_titlecase_tr_or_az('i'), ['İ', '\0', '\0']);
 assert_eq!('i'.to_titlecase_tr_or_az().to_string(), "İ");
 assert_eq!("iIi".to_titlecase_tr_or_az(), "İIi");
-assert_eq!("iIi".to_titlecase_tr_or_az_lower_rest(), "İii");
+assert_eq!("iIi".to_titlecase_tr_or_az_lower_rest(), "İıi");
+```
+
+Additionally, there are upper and lower case utilities for the Turkish and Azeri located in the ```tr_az``` module.
+
+```rust
+use unicode_titlecase::tr_az::{to_uppercase_tr_or_az, to_lowercase_tr_or_az, StrTrAzCasing};
+assert_eq!(to_uppercase_tr_or_az('i').to_string(), "İ");
+assert_eq!(to_lowercase_tr_or_az('I'), 'ı');
+assert_eq!("İIAb".to_lowercase_tr_az(), "iıab");
+assert_eq!("iıab".to_uppercase_tr_az(), "İIAB");
 ```
 
 ## License
