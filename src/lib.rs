@@ -14,6 +14,11 @@ use alloc::string::String;
 use core::fmt::{Debug, Display, Formatter, Result, Write};
 use core::iter::FusedIterator;
 
+// This function was originally in the main module but was moved
+// to tr_az in 2.2.0. This re-export exists to avoid a major change.
+// It should be removed and a part of the next major version.
+pub use tr_az::to_titlecase_tr_or_az;
+
 use crate::tr_az::to_lowercase_tr_or_az;
 
 include!(concat!(env!("OUT_DIR"), "/casing.rs"));
@@ -51,42 +56,6 @@ pub fn to_titlecase(c: char) -> [char; 3] {
         TITLECASE_TABLE[index].1
     } else {
         [c, '\0', '\0']
-    }
-}
-
-#[allow(clippy::doc_link_with_quotes)]
-/// Accepts a char and returns the Unicode title case for that character as a 3 char array.
-///
-/// # Examples
-/// If the character is already titlecase then it will return itself:
-/// ```
-/// use unicode_titlecase::to_titlecase_tr_or_az;
-/// assert_eq!(to_titlecase_tr_or_az('A'), ['A', '\0', '\0']);
-/// ```
-/// Single-char characters are mapped:
-/// ```
-/// use unicode_titlecase::to_titlecase_tr_or_az;
-/// assert_eq!(to_titlecase_tr_or_az('Ǆ'), ['ǅ', '\0', '\0']);
-/// ```
-/// Multi-char ligatures are converted:
-/// ```
-/// use unicode_titlecase::to_titlecase_tr_or_az;
-/// assert_eq!(to_titlecase_tr_or_az('ﬄ'), ['F', 'f', 'l']);
-/// ```
-/// Locale is tr/az:
-/// ```
-/// use unicode_titlecase::to_titlecase_tr_or_az;
-/// assert_eq!(to_titlecase_tr_or_az('i'), ['İ', '\0', '\0']);
-/// ```
-/// # Locale
-/// This function is specific to the tr and az locales. It returns different results for certain
-/// chars. To use locale agnostic version see [`to_titlecase`].
-#[must_use]
-pub fn to_titlecase_tr_or_az(c: char) -> [char; 3] {
-    if c == '\u{0069}' {
-        ['\u{0130}', '\0', '\0']
-    } else {
-        to_titlecase(c)
     }
 }
 
@@ -355,7 +324,7 @@ pub mod tr_az {
     use core::fmt::{Display, Formatter, Result};
     use core::iter::{FusedIterator, once};
 
-    use crate::CaseMappingIter;
+    use crate::{CaseMappingIter, to_titlecase};
 
     /// Accepts a char and returns the Unicode upper case in the TR/AZ locale for that character as a an iterator.
     ///
@@ -397,6 +366,42 @@ pub mod tr_az {
             '\u{0049}' => '\u{0131}', //I => ı
             '\u{0130}' => '\u{0069}', //İ => i
             _ => c.to_lowercase().next().unwrap(), //safe because to_lowercase will at least return c
+        }
+    }
+
+    #[allow(clippy::doc_link_with_quotes)]
+    /// Accepts a char and returns the Unicode title case for that character as a 3 char array.
+    ///
+    /// # Examples
+    /// If the character is already titlecase then it will return itself:
+    /// ```
+    /// use unicode_titlecase::to_titlecase_tr_or_az;
+    /// assert_eq!(to_titlecase_tr_or_az('A'), ['A', '\0', '\0']);
+    /// ```
+    /// Single-char characters are mapped:
+    /// ```
+    /// use unicode_titlecase::to_titlecase_tr_or_az;
+    /// assert_eq!(to_titlecase_tr_or_az('Ǆ'), ['ǅ', '\0', '\0']);
+    /// ```
+    /// Multi-char ligatures are converted:
+    /// ```
+    /// use unicode_titlecase::to_titlecase_tr_or_az;
+    /// assert_eq!(to_titlecase_tr_or_az('ﬄ'), ['F', 'f', 'l']);
+    /// ```
+    /// Locale is tr/az:
+    /// ```
+    /// use unicode_titlecase::to_titlecase_tr_or_az;
+    /// assert_eq!(to_titlecase_tr_or_az('i'), ['İ', '\0', '\0']);
+    /// ```
+    /// # Locale
+    /// This function is specific to the tr and az locales. It returns different results for certain
+    /// chars. To use locale agnostic version see [`to_titlecase`].
+    #[must_use]
+    pub fn to_titlecase_tr_or_az(c: char) -> [char; 3] {
+        if c == '\u{0069}' {
+            ['\u{0130}', '\0', '\0']
+        } else {
+            to_titlecase(c)
         }
     }
 
@@ -533,7 +538,7 @@ pub mod tr_az {
         }
     }
 
-    /// An iterator over a titlecase mapped char.
+    /// An iterator over a char that had its casing changed.
     ///
     /// Copied from the std library's [`core::char::ToLowercase`] and [`core::char::ToUppercase`].
     #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
