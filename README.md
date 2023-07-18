@@ -112,7 +112,7 @@ assert_eq!("iIi".to_titlecase_tr_or_az_lower_rest(), "İıi");
 Additionally, there are upper and lower case utilities for the Turkish and Azeri located in the ```tr_az``` module.
 
 ```rust
-use unicode_titlecase::tr_az::{to_uppercase_tr_or_az, to_lowercase_tr_or_az, StrLowerCaseTrAz};
+use unicode_titlecase::tr_az::{to_uppercase_tr_or_az, to_lowercase_tr_or_az, StrTrAzCasing};
 assert_eq!(to_uppercase_tr_or_az('i').to_string(), "İ");
 assert_eq!(to_lowercase_tr_or_az('I'), 'ı');
 assert_eq!("İIAb".to_lowercase_tr_az(), "iıab");

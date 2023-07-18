@@ -402,12 +402,12 @@ pub mod tr_az {
 
     /// This trait provides functions to perform lower and upper case transformations on a char in
     /// the TR/AZ locale.
-    pub trait LowerCaseTrAz {
+    pub trait TrAzCasing {
         /// Returns the Unicode lower case of this char in the TR/AZ locale.
         ///
         /// # Examples
         /// ```
-        /// use unicode_titlecase::tr_az::LowerCaseTrAz;
+        /// use unicode_titlecase::tr_az::TrAzCasing;
         /// assert_eq!('İ'.to_lowercase_tr_az(), 'i');
         /// assert_eq!('I'.to_lowercase_tr_az(), 'ı');
         /// assert_eq!('A'.to_lowercase_tr_az(), 'a');
@@ -430,7 +430,7 @@ pub mod tr_az {
         ///
         /// # Examples
         /// ```
-        /// use unicode_titlecase::tr_az::LowerCaseTrAz;
+        /// use unicode_titlecase::tr_az::TrAzCasing;
         /// assert_eq!('i'.to_uppercase_tr_az().to_string(), "İ");
         /// assert_eq!('ı'.to_uppercase_tr_az().to_string(), "I");
         /// assert_eq!('a'.to_uppercase_tr_az().to_string(), "A");
@@ -444,7 +444,7 @@ pub mod tr_az {
         fn is_uppercase_tr_az(&self) -> bool;
     }
 
-    impl LowerCaseTrAz for char {
+    impl TrAzCasing for char {
         fn to_lowercase_tr_az(self) -> char {
             to_lowercase_tr_or_az(self)
         }
@@ -464,12 +464,12 @@ pub mod tr_az {
 
     /// This trait provides functions to perform lower and upper case transformations on a str in
     /// the TR/AZ locale.
-    pub trait StrLowerCaseTrAz {
+    pub trait StrTrAzCasing {
         /// Returns the Unicode lower case of this str in the TR/AZ locale as a new String.
         ///
         /// # Examples
         /// ```
-        /// use unicode_titlecase::tr_az::StrLowerCaseTrAz;
+        /// use unicode_titlecase::tr_az::StrTrAzCasing;
         /// assert_eq!("İIAb".to_lowercase_tr_az(), "iıab");
         /// ```
         fn to_lowercase_tr_az(&self) -> String;
@@ -478,7 +478,7 @@ pub mod tr_az {
         ///
         /// # Examples
         /// ```
-        /// use unicode_titlecase::tr_az::StrLowerCaseTrAz;
+        /// use unicode_titlecase::tr_az::StrTrAzCasing;
         /// assert!("abc".is_lowercase_tr_az());
         /// assert!("iı".is_lowercase_tr_az());
         /// ```
@@ -488,7 +488,7 @@ pub mod tr_az {
         /// "i\u{0307}" where U+0307 is Combining Dot Above per the Unicode special casing rules.
         /// The U+0307 char is not considered lowercase. To avoid this issue do not mix the tr/az and locale agnostic functions.
         /// ```
-        /// use unicode_titlecase::tr_az::StrLowerCaseTrAz;
+        /// use unicode_titlecase::tr_az::StrTrAzCasing;
         /// assert!("İ".to_lowercase_tr_az().is_lowercase_tr_az()); //Using TR/AZ lowercasing
         /// assert!(!"İ".to_lowercase().is_lowercase_tr_az()); //WRONG: Using std lib lowercasing
         /// ```
@@ -498,7 +498,7 @@ pub mod tr_az {
         ///
         /// # Examples
         /// ```
-        /// use unicode_titlecase::tr_az::StrLowerCaseTrAz;
+        /// use unicode_titlecase::tr_az::StrTrAzCasing;
         /// assert_eq!("iıab".to_uppercase_tr_az(), "İIAB");
         /// ```
         fn to_uppercase_tr_az(&self) -> String;
@@ -507,7 +507,7 @@ pub mod tr_az {
         ///
         /// # Examples
         /// ```
-        /// use unicode_titlecase::tr_az::StrLowerCaseTrAz;
+        /// use unicode_titlecase::tr_az::StrTrAzCasing;
         /// assert!("ABC".is_uppercase_tr_az());
         /// assert!("İI".is_uppercase_tr_az());
         /// ```
@@ -515,7 +515,7 @@ pub mod tr_az {
         fn is_uppercase_tr_az(&self) -> bool;
     }
 
-    impl StrLowerCaseTrAz for str {
+    impl StrTrAzCasing for str {
         fn to_lowercase_tr_az(&self) -> String {
             self.chars().map(to_lowercase_tr_or_az).collect()
         }
