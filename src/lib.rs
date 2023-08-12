@@ -1,7 +1,4 @@
-//! This crate is an implementation of the Unicode Title Casing algorithm. It implements a trait
-//! on [char] and [str] that adds title case handling methods. These methods are very similar to how
-//! the std library currently handles uppercase and lowercase.
-
+#![doc = include_str!("../README.md")]
 #![no_std]
 #![deny(missing_docs)]
 #![deny(rustdoc::missing_doc_code_examples)]
@@ -720,16 +717,4 @@ mod tests {
             last = *cp;
         });
     }
-}
-
-// Thanks to https://github.com/rust-lang/cargo/issues/383#issuecomment-720873790
-#[cfg(doctest)]
-mod test_readme {
-    macro_rules! external_doc_test {
-        ($x:expr) => {
-            #[doc = $x]
-            extern {}
-        };
-    }
-    external_doc_test!(include_str!("../README.md"));
 }
