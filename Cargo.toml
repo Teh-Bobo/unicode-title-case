@@ -1,6 +1,6 @@
 [package]
 name = "unicode_titlecase"
-version = "2.2.1"
+version = "2.3.0"
 edition = "2021"
 authors = ["Carl Raffaele"]
 license = "MIT OR Apache-2.0"
