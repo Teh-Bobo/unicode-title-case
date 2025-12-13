@@ -4,14 +4,13 @@
 #![deny(unsafe_code)]
 #![warn(clippy::pedantic)]
 
+extern crate alloc;
 mod casing;
 
-extern crate alloc;
-
 use alloc::string::String;
+use casing::TITLECASE_TABLE;
 use core::fmt::{Debug, Display, Formatter, Result, Write};
 use core::iter::FusedIterator;
-use casing::TITLECASE_TABLE;
 
 // This function was originally in the main module but was moved
 // to tr_az in 2.2.0. This re-export exists to avoid a major change.
@@ -147,7 +146,6 @@ impl TitleCase for char {
             .is_err()
     }
 }
-
 
 /// Trait to add titlecase operations to Strings and string slices. Both locale agnostic and TR/AZ
 /// versions of the functions are supplied.
@@ -308,10 +306,7 @@ impl StrTitleCase for str {
 
     fn starts_titlecase_rest_lower(&self) -> bool {
         let mut iter = self.chars();
-        iter.next()
-            .as_ref()
-            .map_or(false, TitleCase::is_titlecase)
-            && iter.all(char::is_lowercase)
+        iter.next().as_ref().map_or(false, TitleCase::is_titlecase) && iter.all(char::is_lowercase)
     }
 }
 
@@ -319,9 +314,9 @@ impl StrTitleCase for str {
 pub mod tr_az {
     use alloc::string::String;
     use core::fmt::{Display, Formatter, Result};
-    use core::iter::{FusedIterator, once};
+    use core::iter::{once, FusedIterator};
 
-    use crate::{CaseMappingIter, to_titlecase};
+    use crate::{to_titlecase, CaseMappingIter};
 
     /// Accepts a char and returns the Unicode upper case in the TR/AZ locale for that character as a an iterator.
     ///
@@ -334,12 +329,14 @@ pub mod tr_az {
     /// ```
     #[must_use]
     pub fn to_uppercase_tr_or_az(c: char) -> TrAzCaseMapper {
-        TrAzCaseMapper::new(once(c)
-            .map(|c| match c {
-                '\u{0069}' => '\u{0130}', //i => İ
-                _ => c,
-            })
-            .flat_map(char::to_uppercase))
+        TrAzCaseMapper::new(
+            once(c)
+                .map(|c| match c {
+                    '\u{0069}' => '\u{0130}', //i => İ
+                    _ => c,
+                })
+                .flat_map(char::to_uppercase),
+        )
     }
 
     /// Accepts a char and returns the Unicode lower case in the TR/AZ locale for that character.
@@ -360,8 +357,8 @@ pub mod tr_az {
     #[must_use]
     pub fn to_lowercase_tr_or_az(c: char) -> char {
         match c {
-            '\u{0049}' => '\u{0131}', //I => ı
-            '\u{0130}' => '\u{0069}', //İ => i
+            '\u{0049}' => '\u{0131}',              //I => ı
+            '\u{0130}' => '\u{0069}',              //İ => i
             _ => c.to_lowercase().next().unwrap(), //safe because to_lowercase will at least return c
         }
     }
@@ -542,8 +539,12 @@ pub mod tr_az {
     pub struct TrAzCaseMapper(CaseMappingIter);
 
     impl TrAzCaseMapper {
-        fn new(mut chars: impl Iterator<Item=char>) -> Self {
-            TrAzCaseMapper(CaseMappingIter::new([chars.next().unwrap_or('\0'), chars.next().unwrap_or('\0'), chars.next().unwrap_or('\0'), ]))
+        fn new(mut chars: impl Iterator<Item = char>) -> Self {
+            TrAzCaseMapper(CaseMappingIter::new([
+                chars.next().unwrap_or('\0'),
+                chars.next().unwrap_or('\0'),
+                chars.next().unwrap_or('\0'),
+            ]))
         }
     }
 
