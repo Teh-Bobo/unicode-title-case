@@ -306,7 +306,7 @@ impl StrTitleCase for str {
 
     fn starts_titlecase_rest_lower(&self) -> bool {
         let mut iter = self.chars();
-        iter.next().as_ref().map_or(false, TitleCase::is_titlecase) && iter.all(char::is_lowercase)
+        iter.next().as_ref().is_some_and(TitleCase::is_titlecase) && iter.all(char::is_lowercase)
     }
 }
 
@@ -422,7 +422,7 @@ pub mod tr_az {
 
         /// Returns true if this char is lowercase as defined by the Unicode standard and false otherwise.
         ///
-        /// This function is included for completeness. It is currently equivalent to char's is_lowercase().
+        /// This function is included for completeness. It is currently equivalent to char's `is_lowercase()`.
         fn is_lowercase_tr_az(&self) -> bool;
 
         /// Returns the Unicode upper case of this char in the TR/AZ locale as an iterator.
@@ -439,7 +439,7 @@ pub mod tr_az {
 
         /// Returns true if this char is uppercase as defined by the Unicode standard and false otherwise.
         ///
-        /// This function is included for completeness. It is currently equivalent to char's is_uppercase().
+        /// This function is included for completeness. It is currently equivalent to char's `is_uppercase()`.
         fn is_uppercase_tr_az(&self) -> bool;
     }
 

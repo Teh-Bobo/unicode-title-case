@@ -98,7 +98,7 @@ All testing functions work the same regardless of locale.
 ### Locale
 
 The Turkish and Azeri (TR/AZ) locales have different rules for how to titlecase certain characters.
-The ```to_titlecase``` functions assume the locale is neither of these locations. A "tr_or_az"
+The ```to_titlecase``` functions assume the locale is neither of these locations. A `tr_or_az`
 version of each function is provided instead.
 
 ```rust
@@ -124,9 +124,9 @@ assert_eq!("iıab".to_uppercase_tr_az(), "İIAB");
 Licensed under either of
 
 * Apache License, Version 2.0
-  ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+  ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
 * MIT license
-  ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+  ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
 
 at your option.
 
