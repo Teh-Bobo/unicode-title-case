@@ -7,7 +7,7 @@ functionality for the TR/AZ locales.
 [![docs.rs](https://img.shields.io/docsrs/unicode_titlecase)](https://docs.rs/unicode_titlecase/latest/unicode_titlecase/)
 ![Crates.io](https://img.shields.io/crates/l/unicode_titlecase)
 [![Crates.io](https://img.shields.io/crates/v/unicode_titlecase)](https://crates.io/crates/unicode_titlecase)
-[![](https://img.shields.io/badge/Unicode_Version-16.0.0-blue)](https://www.unicode.org/Public/16.0.0/)
+[![](https://img.shields.io/badge/Unicode_Version-17.0.0-blue)](https://www.unicode.org/Public/17.0.0/)
 ![](https://img.shields.io/badge/-no__std-green)
 ![](https://img.shields.io/badge/-forbid__unsafe-green)
 
@@ -129,6 +129,12 @@ Licensed under either of
   ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
 
 at your option.
+
+## Changelog
+* 12 December 2025 - Release 2.5.0: 
+  * Upgraded to Unicode 17.0.0, 
+  * Upgraded to Rust 2024 edition,
+  * Started a changelog
 
 ## Contribution
 
