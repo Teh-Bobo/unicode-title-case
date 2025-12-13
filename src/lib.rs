@@ -1,15 +1,17 @@
 #![doc = include_str!("../README.md")]
 #![no_std]
 #![deny(missing_docs)]
-#![deny(rustdoc::missing_doc_code_examples)]
 #![deny(unsafe_code)]
 #![warn(clippy::pedantic)]
+
+mod casing;
 
 extern crate alloc;
 
 use alloc::string::String;
 use core::fmt::{Debug, Display, Formatter, Result, Write};
 use core::iter::FusedIterator;
+use casing::TITLECASE_TABLE;
 
 // This function was originally in the main module but was moved
 // to tr_az in 2.2.0. This re-export exists to avoid a major change.
@@ -17,8 +19,6 @@ use core::iter::FusedIterator;
 pub use tr_az::to_titlecase_tr_or_az;
 
 use crate::tr_az::to_lowercase_tr_or_az;
-
-include!(concat!(env!("OUT_DIR"), "/casing.rs"));
 
 #[allow(clippy::doc_link_with_quotes)]
 /// Accepts a char and returns the Unicode title case for that character as a 3 char array.
@@ -303,7 +303,7 @@ impl StrTitleCase for str {
         self.chars()
             .next()
             .as_ref()
-            .map_or(false, TitleCase::is_titlecase)
+            .is_some_and(TitleCase::is_titlecase)
     }
 
     fn starts_titlecase_rest_lower(&self) -> bool {
@@ -700,7 +700,7 @@ impl Display for CaseMappingIter {
 
 #[cfg(test)]
 mod tests {
-    include!(concat!(env!("OUT_DIR"), "/casing.rs"));
+    use crate::casing::TITLECASE_TABLE;
 
     #[test]
     fn self_mapping() {
