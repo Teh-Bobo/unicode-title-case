@@ -1,8 +1,5 @@
 # Unicode Titlecase
 
-Unicode titlecasing operations for chars and strings. The crate supports additional
-functionality for the TR/AZ locales.
----
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/Teh-Bobo/unicode-title-case/rust.yml?branch=master)](https://github.com/Teh-Bobo/unicode-title-case/actions)
 [![docs.rs](https://img.shields.io/docsrs/unicode_titlecase)](https://docs.rs/unicode_titlecase/latest/unicode_titlecase/)
 ![Crates.io](https://img.shields.io/crates/l/unicode_titlecase)
@@ -10,6 +7,13 @@ functionality for the TR/AZ locales.
 [![](https://img.shields.io/badge/Unicode_Version-17.0.0-blue)](https://www.unicode.org/Public/17.0.0/)
 ![](https://img.shields.io/badge/-no__std-green)
 ![](https://img.shields.io/badge/-forbid__unsafe-green)
+
+Unicode titlecasing operations for chars and strings.
+This crate supports the additional functionality needed to handle TR and AZ locales.
+
+Note this crate operates on strings as single words or tokens; it does not handle the gramatical rules to title-case longer strings of text.
+To handle prose such as titles, see the [decasify](https://github.com/alerque/decasify) crate.
+It uses this crate for re-casing each word, but additionally looks for gramatical clues in the context of longer strings and applies language specific style guides, including Turkish support.
 
 ## Usage
 
